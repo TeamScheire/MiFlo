@@ -335,12 +335,14 @@ void show_clock() {
   break;
   }
 
-  GD.ColorRGB(COLOR_BEIGE);
-  GD.cmd_fgcolor(COLOR_BLACK);
-  GD.ColorA(128);
-  GD.Tag(210);
-  GD.cmd_button( 20, GD.h-40, 20, 20, 20, OPT_FLAT, int2char(cache.size()) );
-  GD.ColorA(255);
+  if( cache.size() > 0 ) {
+    GD.ColorRGB(COLOR_BEIGE);
+    GD.cmd_fgcolor(COLOR_BLACK);
+    GD.ColorA(128);
+    GD.Tag(210);
+    GD.cmd_button( 20, GD.h-40, 20, 20, 20, OPT_FLAT, int2char(cache.size()) );
+    GD.ColorA(255);
+  }
 
 }
 

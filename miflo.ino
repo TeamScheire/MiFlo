@@ -55,6 +55,19 @@ bool ritual_done[ 4 ] = { false, false, false, false };
 
 char* timer_job = "";
 
+char* string2char(String s){
+    if(s.length()!=0){
+        char *p = const_cast<char*>(s.c_str());
+        return p;
+    }
+}
+
+char* int2char(int n){
+  char s[16];
+  itoa(n, s, 10);
+  return s;
+}
+
 #include <vector>
 std::vector< String > log_history;
 void add_log( String message ) {
@@ -181,27 +194,29 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   parse_command(json);
 }
 
+long lastReconnectAttempt = 0;
 void mqttOnlineCheck() {
   if(!client.connected()) {
-    client.setServer(mqttServer, mqttPort);
-    client.setCallback(mqttCallback);
-  
-    while (!client.connected()) {
+    long now = millis();
+    if (now - lastReconnectAttempt > 5000) {
+      lastReconnectAttempt = now;
+      client.setServer(mqttServer, mqttPort);
+      client.setCallback(mqttCallback);
+    
       add_log("Connecting to MQTT ...");
    
       if (client.connect("AnthonysLittleClient" )) {
    
-        add_log("Connected to MQTT");  
+        add_log("Connected to MQTT");
+        client.subscribe(mqttTopic);
    
       } else {
    
-        Serial.print("failed with state ");
-        Serial.print(client.state());
-        delay(2000);
+        add_log("MQTT connect failed");
+        // add_log(client.state());
    
       }
     }
-    client.subscribe(mqttTopic);
   }
 }
 
@@ -242,8 +257,7 @@ void load_jpgs()
   GD.load("toilet.jpg");
 }
 
-void setup()
-{
+void setup() {
   Serial.begin(115200);
 
   Serial.println("Starting gameduino ...");
@@ -282,19 +296,6 @@ void setup()
   
   state = CLOCK;
   
-}
-
-char* string2char(String s){
-    if(s.length()!=0){
-        char *p = const_cast<char*>(s.c_str());
-        return p;
-    }
-}
-
-char* int2char(int n){
-  char s[16];
-  itoa(n, s, 10);
-  return s;
 }
 
 String format_time( int hour, int minute, int second ) {
@@ -442,7 +443,7 @@ void show_timer_finished() {
 
 }
 
-void statusbar() {
+void statusbar( int hour, int minute, int second ) {
 
   GD.ColorA(128);
 
@@ -454,7 +455,7 @@ void statusbar() {
   if( client.connected() ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
   GD.cmd_text(25, 5, 20, 0, "MQTT");
 
-  String time = current_time();
+  String time = format_time( hour, minute, second );
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_text(GD.w - 65, 5, 20, 0, string2char(time));
   GD.ColorA(255);
@@ -672,14 +673,15 @@ void loop() {
   GD.ClearColorRGB(bgcolor);
   GD.Clear();
 
-  statusbar();
-
   DateTime now = rtc.now();
   double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
   int current_h = now.hour();
   int current_m = now.minute();
   int current_s = now.second();
   
+  // always show the statusbar
+  statusbar( current_h, current_m, current_s );
+
   // dependent on state, show contents
   switch (state) {
     case FINISHED:
@@ -731,6 +733,8 @@ void loop() {
   // bring the contents to the front
   GD.swap();
 
+  // make sure we're still online
+  mqttOnlineCheck();
   rand(); // keep generating random numbers to mess with the seed
 
 }

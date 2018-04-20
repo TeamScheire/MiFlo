@@ -80,6 +80,32 @@ void show_log() {
   }
 }
 
+void jingle( int n = 0 ) {
+  if( n == 0 ) {
+    GD.play( MUSICBOX, 60 );
+    delay(250);
+    GD.play( MUSICBOX, 60 );
+    delay(500);
+    GD.play( MUTE );
+  } else if( n == 1 ) {
+    GD.play( MUSICBOX, 60 );
+    delay(250);
+    GD.play( MUSICBOX, 60 );
+    delay(250);
+    GD.play( MUSICBOX, 60 );
+    delay(500);
+    GD.play( MUTE );
+  } else if( n == 2 ) {
+    GD.play( PIANO, 55 );
+    delay(250);
+    GD.play( PIANO, 64 );
+    delay(250);
+    GD.play( PIANO, 60 );
+    delay(500);
+    GD.play( MUTE );
+  }
+}
+
 #include <map>
 std::map< int, String > cache;
 
@@ -138,12 +164,7 @@ void parse_command( char* json ) {
     DateTime now = rtc.now();
     time_timer = now.unixtime() + minutes * SECONDS_PER_MINUTE;
     state = TIME_TIMER;
-
-    GD.play( MUSICBOX, 60 );
-    delay(250);
-    GD.play( MUSICBOX, 60 );
-    delay(250);
-    GD.play( MUSICBOX, 60 );
+    jingle(1);
   }
 }
 
@@ -227,6 +248,7 @@ void setup()
 
   Serial.println("Starting gameduino ...");
   GD.begin();
+  GD.play( MUTE );
   GD.cmd_setrotate(0);
   add_log("Gameduino started");
 
@@ -397,9 +419,7 @@ void show_timer_finished() {
 
   if( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
-    GD.play( MUSICBOX, 60 );
-    delay(250);
-    GD.play( MUSICBOX, 60 );
+    jingle();
   }
   
   GD.get_inputs();
@@ -445,9 +465,7 @@ void show_reminder(String job) {
 
   if( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
-    GD.play( MUSICBOX, 60 );
-    delay(250);
-    GD.play( MUSICBOX, 60 );
+    jingle();
   }
   
   GD.get_inputs();
@@ -498,9 +516,7 @@ void kine_reminder(String job) {
 
   if( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
-    GD.play( MUSICBOX, 60 );
-    delay(250);
-    GD.play( MUSICBOX, 60 );
+    jingle();
   }
   
   GD.get_inputs();
@@ -600,11 +616,7 @@ void show_minne() {
 
   if( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 30;
-    GD.play( PIANO, 55 );
-    delay(250);
-    GD.play( PIANO, 64 );
-    delay(250);
-    GD.play( PIANO, 60 );
+    jingle(2);
   }
   
   show_todos( 1 );

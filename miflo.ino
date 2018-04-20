@@ -257,7 +257,8 @@ void setup()
   rtc.adjust(DateTime(__DATE__, __TIME__));
 
   add_log( "MiFlo has booted successfully!" );
-  //state = CLOCK;
+  
+  state = CLOCK;
   
 }
 

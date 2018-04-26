@@ -30,6 +30,9 @@ RTC_DS1307 rtc;
 #define COLOR_BLACK 0x030302
 #define COLOR_WHITE 0xffe9e6
 
+#define MUSICFILE   "product.ima"
+static Streamer stream;
+
 #define GOED_AANTAL 16
 char* goed[GOED_AANTAL] = { "fantastisch", "buitengewoon", "geweldig", "fenomenaal", "toverachtig", "wonderlijk", "uitstekend", "eersteklas", "opperbest", "excellent", "briljant", "grandioos", "machtig", "sensationeel", "volmaakt", "uitzonderlijk" };
 int goed1, goed2;
@@ -152,14 +155,16 @@ void parse_command( char* json ) {
   if( strcmp( type, "reset" ) == 0 ) {
     add_log("Running reset");
     state = CLOCK;
+  } else if( strcmp( type, "audio" ) == 0 ) {
+    add_log("Playing audio");
+    stream.begin(MUSICFILE);
   } else if( strcmp( type, "settime" ) == 0 ) {
     add_log("Setting the clock");
     int hour = root["hour"];
     int minute = root["minute"];
     String timestring = format_time( hour, minute, 0 );
     rtc.adjust(DateTime(__DATE__, string2char(timestring)));
-  }
-    else if( strcmp( type, "events" ) == 0 ) {
+  } else if( strcmp( type, "events" ) == 0 ) {
     add_log("Caching events");
     cache.clear();
     for( int i=0; i < root["events"].size(); i++ ) {
@@ -316,6 +321,8 @@ void setup() {
   GD.begin();
   GD.play( MUTE );
   GD.cmd_setrotate(0);
+  GD.cmd_regwrite(REG_VOL_PB, 127);
+  GD.cmd_regwrite(REG_VOL_SOUND, 127);
   add_log("Gameduino started");
 
   add_log("Loading JPGs ...");
@@ -488,6 +495,7 @@ void show_timer_finished() {
     goed1 = rand() % 16;
     goed2 = rand() % 16;
     state = GOED_GEDAAN;
+    stream.begin(MUSICFILE);
     delay(200);
   break;
   }
@@ -786,8 +794,14 @@ void loop() {
   // bring the contents to the front
   GD.swap();
 
-  // make sure we're still online
+  // make sure we're still connected to MQTT
   mqttOnlineCheck();
-  rand(); // keep generating random numbers to mess with the seed
+  // keep the audio streamer going
+  uint16_t val, range;
+  stream.progress(val, range);
+  if( val < range )
+    stream.feed();
+  // keep generating random numbers to mess with the seed
+  rand();
 
 }

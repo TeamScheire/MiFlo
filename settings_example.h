@@ -1,3 +1,5 @@
+const char* person = "name";
+
 const char* ssid = "SSID";
 const char* password =  "PASSWORD";
 

@@ -290,7 +290,7 @@ void setup() {
 
   // set clock to compile time
   // only uncomment if you want to set this date
-  rtc.adjust(DateTime(__DATE__, __TIME__));
+  // rtc.adjust(DateTime(__DATE__, __TIME__));
 
   add_log( "MiFlo has booted successfully!" );
   
@@ -456,6 +456,8 @@ void statusbar( int hour, int minute, int second ) {
   client.loop();
   if( client.connected() ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
   GD.cmd_text(25, 5, 20, 0, "MQTT");
+  GD.ColorRGB(COLOR_BEIGE);
+  GD.cmd_text(GD.w/2, 12, 20, OPT_CENTER, person);
 
   String time = format_time( hour, minute, second );
   GD.ColorRGB(COLOR_BLACK);

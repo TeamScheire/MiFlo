@@ -132,7 +132,14 @@ void parse_command( char* json ) {
   if( strcmp( type, "reset" ) == 0 ) {
     add_log("Running reset");
     state = CLOCK;
-  } else if( strcmp( type, "events" ) == 0 ) {
+  } else if( strcmp( type, "settime" ) == 0 ) {
+    add_log("Setting the clock");
+    int hour = root["hour"];
+    int minute = root["minute"];
+    String timestring = format_time( hour, minute, 0 );
+    rtc.adjust(DateTime(__DATE__, string2char(timestring)));
+  }
+    else if( strcmp( type, "events" ) == 0 ) {
     add_log("Caching events");
     cache.clear();
     for( int i=0; i < root["events"].size(); i++ ) {
@@ -299,12 +306,16 @@ void setup() {
 }
 
 String format_time( int hour, int minute, int second ) {
-  return String( hour < 10 ? "0" : " " ) + hour + ( minute < 10 ? " : 0" : " : " ) + minute + ( second < 10 ? " : 0" : " : " ) + second;
+  return String( hour < 10 ? "0" : "" ) + hour + ( minute < 10 ? ":0" : ":" ) + minute + ( second < 10 ? ":0" : ":" ) + second;
+}
+
+String format_time_space( int hour, int minute, int second ) {
+  return String( hour < 10 ? "0" : "" ) + hour + ( minute < 10 ? " : 0" : " : " ) + minute + ( second < 10 ? " : 0" : " : " ) + second;
 }
 
 String current_time() {
   DateTime now = rtc.now();
-  return format_time( now.hour(), now.minute(), now.second() );
+  return format_time_space  ( now.hour(), now.minute(), now.second() );
 }
 
 int animation_counter = 0;

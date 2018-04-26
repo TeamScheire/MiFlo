@@ -40,15 +40,35 @@ enum State { CLOCK, TIME_TIMER, FINISHED, TOILET_REMINDER, DRINK_REMINDER, KINE_
 State state = SHOW_LOG;
 long time_timer = 0;
 
-enum JPG { AANKLEDEN_JPG, BED_OPMAKEN_JPG, BRIL_JPG, DRINKEN_JPG, KINE_JPG, LEGO_JPG, ONDERBROEK_JPG, OPRUIMEN_JPG, PYJAMA_OPRUIMEN_JPG, TANDEN_JPG, TOILET_JPG };
+enum JPG { 
+  BRIL_JPG, 
+  DOUCHEN_JPG, 
+  DRINKEN_JPG, 
+  HAAR_JPG, 
+  HUISWERK_JPG, 
+  KAKA_JPG, 
+  KINE_JPG, 
+  KLUSSEN_JPG, 
+  LEGOPRUM_JPG, 
+  LEZEN_JPG, 
+  NAGELS_JPG, 
+  NOPANIC_JPG, 
+  PILLEN_JPG, 
+  PIPIKAKA_JPG,
+  POMPEN_JPG,
+  PYJAMA_JPG,
+  TANDEN_JPG,
+  UITMEST_JPG,
+  WASMAND_JPG
+};
 
 JPG ritual_images[ 2 ][ 4 ] = {
-  { TANDEN_JPG, PYJAMA_OPRUIMEN_JPG, BED_OPMAKEN_JPG, ONDERBROEK_JPG },
-  { TANDEN_JPG, AANKLEDEN_JPG, BRIL_JPG, OPRUIMEN_JPG }
+  { TANDEN_JPG, PYJAMA_JPG, UITMEST_JPG, WASMAND_JPG },
+  { TANDEN_JPG, PYJAMA_JPG, UITMEST_JPG, WASMAND_JPG }
 };
 
 char* ritual_texts[ 2 ][ 4 ] = { 
-  { "tanden poetsen", "pyjama ophangen", "bed opmaken", "ondergoed in de was" }, 
+  { "tanden poetsen", "pyjama ophangen", "bed uitmesten", "ondergoed in de was" }, 
   { "tanden poetsen", "kleren aandoen", "bril aan", "kamer opruimen" } 
 };
 bool ritual_done[ 4 ] = { false, false, false, false };
@@ -229,39 +249,64 @@ void mqttOnlineCheck() {
 
 void load_jpgs()
 {
-  GD.BitmapHandle(AANKLEDEN_JPG);
-  GD.cmd_loadimage(0, 0);
-  GD.load("aanklede.jpg");
-  GD.BitmapHandle(BED_OPMAKEN_JPG);
-  GD.cmd_loadimage(-1, 0);
-  GD.load("bedopmak.jpg");
+
   GD.BitmapHandle(BRIL_JPG);
+  GD.cmd_loadimage(0, 0);
+  GD.load("BRIL.jpg");
+  GD.BitmapHandle(DOUCHEN_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("bril.jpg");
+  GD.load("DOUCHEN.jpg");
   GD.BitmapHandle(DRINKEN_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("bril.jpg");
+  GD.load("DRINKEN.jpg");
+  GD.BitmapHandle(HAAR_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("HAAR.jpg");
+  GD.BitmapHandle(HUISWERK_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("HUISWERK.jpg");
+  GD.BitmapHandle(KAKA_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("KAKA.jpg");
   GD.BitmapHandle(KINE_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("beweging.jpg");
-  GD.BitmapHandle(LEGO_JPG);
+  GD.load("KINE.jpg");
+  GD.BitmapHandle(KLUSSEN_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("lego.jpg");
-  GD.BitmapHandle(ONDERBROEK_JPG);
+  GD.load("KLUSSEN.jpg");
+  GD.BitmapHandle(LEGOPRUM_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("onderbro.jpg");
-  GD.BitmapHandle(OPRUIMEN_JPG);
+  GD.load("LEGOPRUM.jpg");
+  GD.BitmapHandle(LEZEN_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("opruimen.jpg");
-  GD.BitmapHandle(PYJAMA_OPRUIMEN_JPG);
+  GD.load("LEZEN.jpg");
+  GD.BitmapHandle(NAGELS_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("pyjaopru.jpg");
+  GD.load("NAGELS.jpg");
+  GD.BitmapHandle(NOPANIC_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("NOPANIC.jpg");
+  GD.BitmapHandle(PILLEN_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("PILLEN.jpg");
+  GD.BitmapHandle(PIPIKAKA_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("PIPIKAKA.jpg");
+  GD.BitmapHandle(POMPEN_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("POMPEN.jpg");
+  GD.BitmapHandle(PYJAMA_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("PYJAMA.jpg");
   GD.BitmapHandle(TANDEN_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("tanden.jpg");
-  GD.BitmapHandle(TOILET_JPG);
+  GD.load("TANDEN.jpg");
+  GD.BitmapHandle(UITMEST_JPG);
   GD.cmd_loadimage(-1, 0);
-  GD.load("toilet.jpg");
+  GD.load("UITMEST.jpg");
+  GD.BitmapHandle(WASMAND_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("WASMAND.jpg");
 }
 
 void setup() {
@@ -646,14 +691,7 @@ void run_time_timer() {
   int current_m = now.minute();
   int current_s = now.second();
 
-  if( strcmp( timer_job, "lego" ) == 0 ) {
-    GD.Begin(BITMAPS);
-    GD.ColorRGB(COLOR_BEIGE);
-    GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, LEGO_JPG );
-    GD.ColorRGB(COLOR_BLACK);
-    GD.cmd_text(GD.w / 2 + GD.w / 4, GD.h / 2 + 60, 28, OPT_CENTER, timer_job);
-    show_time_timer( minutes, GD.w / 2 - GD.w / 4 + 50, GD.h / 2, 100 );
-  } else if( strcmp( timer_job, "kine" ) == 0 ) {
+  if( strcmp( timer_job, "kine" ) == 0 ) {
     GD.Begin(BITMAPS);
     GD.ColorRGB(COLOR_BEIGE);
     GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, KINE_JPG );

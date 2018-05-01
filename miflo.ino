@@ -50,8 +50,8 @@ int goed1, goed2;
 
 int points = 1;
 
-enum State { CLOCK, TIME_TIMER, FINISHED, REMINDER, FLO, MINNE, GOED_GEDAAN, UPCOMING, SHOW_LOG };
-State state = SHOW_LOG;
+enum State { CLOCK_STATE, TIME_TIMER_STATE, FINISHED_STATE, REMINDER_STATE, ALARM_STATE, FLO_STATE, MINNE_STATE, GOED_GEDAAN_STATE, UPCOMING_STATE, SHOW_LOG_STATE };
+State state = SHOW_LOG_STATE;
 long time_timer = 0;
 
 enum JPG { 
@@ -110,7 +110,7 @@ void add_log( String message ) {
   while( log_history.size() > 16 ) {
     log_history.erase( log_history.begin() );
   }
-  if( state == SHOW_LOG ) {
+  if( state == SHOW_LOG_STATE ) {
     GD.ClearColorRGB(COLOR_BLACK);
     GD.Clear();
     GD.ColorRGB(COLOR_BEIGE);
@@ -203,7 +203,7 @@ void parse_command( char* json ) {
 
   if( strcmp( type, "reset" ) == 0 ) {
     add_log("Running reset");
-    state = CLOCK;
+    state = CLOCK_STATE;
   } else if( strcmp( type, "audio" ) == 0 ) {
     add_log("Playing audio");
     sample();
@@ -226,7 +226,7 @@ void parse_command( char* json ) {
     }
   } else if( strcmp( type, "log" ) == 0 ) {
     add_log("Showing log");
-    state = SHOW_LOG;
+    state = SHOW_LOG_STATE;
   } else if( strcmp( type, "plus" ) == 0 ) {
     add_log("Running plus");
     points++;
@@ -239,14 +239,14 @@ void parse_command( char* json ) {
     ritual_done[ 1 ] = false;
     ritual_done[ 2 ] = false;
     ritual_done[ 3 ] = false;
-    state = FLO;
+    state = FLO_STATE;
   } else if( strcmp( type, "minne" ) == 0 ) {
     add_log("Running minne");
     ritual_done[ 0 ] = false;
     ritual_done[ 1 ] = false;
     ritual_done[ 2 ] = false;
     ritual_done[ 3 ] = false;
-    state = MINNE;
+    state = MINNE_STATE;
   } else if( strcmp( type, "timetimer" ) == 0 ) {
     add_log("Running timetimer");
     int minutes = root["minutes"];
@@ -257,13 +257,18 @@ void parse_command( char* json ) {
     add_log( job );
     DateTime now = rtc.now();
     time_timer = now.unixtime() + minutes * SECONDS_PER_MINUTE;
-    state = TIME_TIMER;
+    state = TIME_TIMER_STATE;
     jingle(1);
   } else if( strcmp( type, "reminder" ) == 0 ) {
     add_log("Running reminder");
     const char* job = root["message"];
     strcpy(current_job_string, job);
-    state = REMINDER;
+    state = REMINDER_STATE;
+  } else if( strcmp( type, "alarm" ) == 0 ) {
+    add_log("Running alarm");
+    const char* job = root["message"];
+    strcpy(current_job_string, job);
+    state = ALARM_STATE;
   }
 }
 
@@ -409,7 +414,7 @@ void setup() {
 
   add_log( "MiFlo has booted successfully!" );
   
-  state = CLOCK;
+  state = CLOCK_STATE;
   
 }
 
@@ -450,7 +455,7 @@ void show_clock() {
   GD.get_inputs();
   switch (GD.inputs.tag) {
   case 210:
-    state = UPCOMING;
+    state = UPCOMING_STATE;
   break;
   }
 
@@ -551,8 +556,7 @@ void show_timer_finished() {
     points++;
     goed1 = rand() % 16;
     goed2 = rand() % 16;
-    state = GOED_GEDAAN;
-    sample();
+    state = GOED_GEDAAN_STATE;
     delay(200);
   break;
   }
@@ -598,14 +602,14 @@ void show_reminder(String job) {
   switch (GD.inputs.tag) {
   case 201:
     sample();
-    state = CLOCK;
+    state = CLOCK_STATE;
     points++;
   break;
   }
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_text(GD.w / 2, GD.h / 2-40, 28, OPT_CENTER, "Niet vergeten!");
-  GD.cmd_text(GD.w / 2, GD.h / 2, 31, OPT_CENTER, string2char(job));
+  GD.cmd_text(GD.w / 2, GD.h / 2, 29, OPT_CENTER, string2char(job));
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_GREEN);
@@ -613,12 +617,39 @@ void show_reminder(String job) {
   GD.cmd_button( GD.w / 2 - 200, GD.h-60, 400, 50, 27, OPT_FLAT, "OK, ik zal het niet vergeten" );
 }
 
+void show_alarm(String job) {
+  DateTime now = rtc.now();
+
+  if( now.unixtime() >= next_alarm_bleep ) {
+    next_alarm_bleep = now.unixtime() + 2;
+    jingle();
+  }
+  
+  GD.get_inputs();
+  switch (GD.inputs.tag) {
+  case 201:
+    sample();
+    state = CLOCK_STATE;
+    points++;
+  break;
+  }
+
+  GD.ColorRGB(COLOR_BLACK);
+  GD.cmd_text(GD.w / 2, GD.h / 2-40, 28, OPT_CENTER, "Alarm!");
+  GD.cmd_text(GD.w / 2, GD.h / 2, 29, OPT_CENTER, string2char(job));
+
+  GD.ColorRGB(COLOR_BLACK);
+  GD.cmd_fgcolor(COLOR_GREEN);
+  GD.Tag(201);
+  GD.cmd_button( GD.w / 2 - 200, GD.h-60, 400, 50, 27, OPT_FLAT, "OK" );
+}
+
 void show_upcoming_events() {
   
   GD.get_inputs();
   switch (GD.inputs.tag) {
   case 211:
-    state = CLOCK;
+    state = CLOCK_STATE;
   break;
   }
 
@@ -642,7 +673,8 @@ void show_goed_gedaan() {
   GD.get_inputs();
   switch (GD.inputs.tag) {
   case 201:
-    state = CLOCK;
+    sample();
+    state = CLOCK_STATE;
   break;
   }
 
@@ -694,7 +726,7 @@ void show_todos( int person ) {
     points += 4;
     goed1 = rand() % GOED_AANTAL;
     goed2 = rand() % GOED_AANTAL;
-    state = GOED_GEDAAN;
+    state = GOED_GEDAAN_STATE;
   }
 }
 
@@ -731,28 +763,11 @@ void run_time_timer() {
   } else
     show_time_timer( minutes, GD.w / 2, GD.h / 2, 100 );
   if( now.unixtime() >= time_timer ) { 
-    state = FINISHED; 
+    state = FINISHED_STATE; 
   }
 }
 
 void loop() {
-
-  // clear screen
-  uint32_t bgcolor = COLOR_BEIGE;
-  switch (state) {
-    case CLOCK:
-    case SHOW_LOG:
-      bgcolor = COLOR_BLACK;
-    break;
-    case REMINDER:
-      bgcolor = COLOR_YELLOW;
-    break;
-    case GOED_GEDAAN:
-      bgcolor = COLOR_GREEN;
-    break;
-  }
-  GD.ClearColorRGB(bgcolor);
-  GD.Clear();
 
   DateTime now = rtc.now();
   double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
@@ -760,28 +775,51 @@ void loop() {
   int current_m = now.minute();
   int current_s = now.second();
   
+  // clear screen
+  uint32_t bgcolor = COLOR_BEIGE;
+  switch (state) {
+    case CLOCK_STATE:
+    case SHOW_LOG_STATE:
+      bgcolor = COLOR_BLACK;
+    break;
+    case REMINDER_STATE:
+      bgcolor = COLOR_YELLOW;
+    break;
+    case ALARM_STATE:
+      bgcolor = COLOR_RED;
+    break;
+    case GOED_GEDAAN_STATE:
+      bgcolor = COLOR_GREEN;
+    break;
+  }
+  GD.ClearColorRGB(bgcolor);
+  GD.Clear();
+
   // always show the statusbar
   statusbar( current_h, current_m, current_s );
 
   // dependent on state, show contents
   switch (state) {
-    case FINISHED:
+    case FINISHED_STATE:
       show_timer_finished();
     break;
-    case REMINDER:
+    case REMINDER_STATE:
       show_reminder( current_job_string );
     break;
-    case TIME_TIMER:
+    case ALARM_STATE:
+      show_alarm( current_job_string );
+    break;
+    case TIME_TIMER_STATE:
       run_time_timer();
     break;
-    case UPCOMING:
+    case UPCOMING_STATE:
       show_upcoming_events();
     break;
-    case SHOW_LOG:
+    case SHOW_LOG_STATE:
       GD.ColorRGB(COLOR_BEIGE);
       show_log();
     break;
-    case CLOCK:
+    case CLOCK_STATE:
       int cache_time;
       cache_time = current_h * 10000 + current_m * 100 + current_s;
       if( cache.count( cache_time ) ) {
@@ -789,18 +827,14 @@ void loop() {
         cache.erase(cache_time);
       }
       show_clock();
-//      if( ( current_m == 13 ) && ( current_s == 37 ) ) state = TOILET_REMINDER;
-//      if( ( current_m == 37 ) && ( current_s == 13 ) ) state = DRINK_REMINDER;
-//      if( !kine_done && ( current_m == 15 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
-//      if( !kine_done && ( current_m == 40 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
     break;
-    case FLO:
+    case FLO_STATE:
       show_flo();
     break;
-    case MINNE:
+    case MINNE_STATE:
       show_minne();
     break;
-    case GOED_GEDAAN:
+    case GOED_GEDAAN_STATE:
       show_goed_gedaan();
     break;
   }

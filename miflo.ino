@@ -50,54 +50,47 @@ int goed1, goed2;
 
 int points = 1;
 
-enum State { CLOCK_STATE, TIME_TIMER_STATE, FINISHED_STATE, REMINDER_STATE, ALARM_STATE, FLO_STATE, MINNE_STATE, GOED_GEDAAN_STATE, UPCOMING_STATE, SHOW_LOG_STATE };
+enum State { CLOCK_STATE, TIME_TIMER_STATE, FINISHED_STATE, REMINDER_STATE, ALARM_STATE, TODO_STATE, GOED_GEDAAN_STATE, UPCOMING_STATE, SHOW_LOG_STATE };
 State state = SHOW_LOG_STATE;
 long time_timer = 0;
 
-enum JPG { 
-  BRIL_JPG, 
-  DOUCHEN_JPG, 
-  DRINKEN_JPG, 
-  HAAR_JPG, 
-  HUISWERK_JPG, 
-  KAKA_JPG, 
-  KINE_JPG, 
-  KLUSSEN_JPG, 
-  LEGOPRUM_JPG, 
-  LEZEN_JPG, 
-  NAGELS_JPG, 
-  NOPANIC_JPG, 
-  PILLEN_JPG, 
+enum JPG {
+  BRIL_JPG,
+  DOUCHEN_JPG,
+  DRINKEN_JPG,
+  HAAR_JPG,
+  HUISWERK_JPG,
+  KAKA_JPG,
+  KINE_JPG,
+  KLUSSEN_JPG,
+  LEGOPRUM_JPG,
+  LEZEN_JPG,
+  NAGELS_JPG,
+  NOPANIC_JPG,
+  PILLEN_JPG,
   PIPIKAKA_JPG,
   POMPEN_JPG,
   PYJAMA_JPG,
   TANDEN_JPG,
   UITMEST_JPG,
   WASMAND_JPG,
-  BUFFER_JPG
+  UNKNOWN_JPG
 };
 
-JPG ritual_images[ 2 ][ 4 ] = {
-  { TANDEN_JPG, PYJAMA_JPG, UITMEST_JPG, WASMAND_JPG },
-  { TANDEN_JPG, PYJAMA_JPG, UITMEST_JPG, WASMAND_JPG }
-};
-
-char* ritual_texts[ 2 ][ 4 ] = { 
-  { "tanden poetsen", "pyjama ophangen", "bed uitmesten", "ondergoed in de was" }, 
-  { "tanden poetsen", "kleren aandoen", "bril aan", "kamer opruimen" } 
-};
-bool ritual_done[ 4 ] = { false, false, false, false };
+int todo_jpgs[ 4 ] = { TANDEN_JPG, PYJAMA_JPG, UITMEST_JPG, WASMAND_JPG };
+String todo_texts[ 4 ] = { "tanden poetsen", "pyjama ophangen", "bed uitmesten", "ondergoed in de was" };
+bool todo_done[ 4 ] = { false, false, false, false };
 
 char current_job_string[200] = "";
 
-char* string2char(String s){
-    if(s.length()!=0){
-        char *p = const_cast<char*>(s.c_str());
-        return p;
-    }
+char* string2char(String s) {
+  if (s.length() != 0) {
+    char *p = const_cast<char*>(s.c_str());
+    return p;
+  }
 }
 
-char* int2char(int n){
+char* int2char(int n) {
   char s[16];
   itoa(n, s, 10);
   return s;
@@ -108,10 +101,10 @@ std::vector< String > log_history;
 void add_log( String message ) {
   Serial.println( message );
   log_history.push_back( message );
-  while( log_history.size() > 16 ) {
+  while ( log_history.size() > 16 ) {
     log_history.erase( log_history.begin() );
   }
-  if( state == SHOW_LOG_STATE ) {
+  if ( state == SHOW_LOG_STATE ) {
     GD.ClearColorRGB(COLOR_BLACK);
     GD.Clear();
     GD.ColorRGB(COLOR_BEIGE);
@@ -122,7 +115,7 @@ void add_log( String message ) {
 
 void show_log() {
   int x = 0;
-  for( std::vector< String >::iterator i = log_history.begin(); i != log_history.end(); i++ ) {
+  for ( std::vector< String >::iterator i = log_history.begin(); i != log_history.end(); i++ ) {
     GD.cmd_text(5, 25 + x * 14, 20, 0, string2char(*i));
     x++;
   }
@@ -162,18 +155,18 @@ void sample() {
   len = samplelengths[i];
   freq = samplefreqs[i];
   GD.sample(base, len, freq, ADPCM_SAMPLES);
-  delay(2000*len/freq);
+  delay(2000 * len / freq);
   GD.play(MUTE);
 }
 
 void jingle( int n = 0 ) {
-  if( n == 0 ) {
+  if ( n == 0 ) {
     GD.play( MUSICBOX, 60 );
     delay(250);
     GD.play( MUSICBOX, 60 );
     delay(500);
     GD.play( MUTE );
-  } else if( n == 1 ) {
+  } else if ( n == 1 ) {
     GD.play( MUSICBOX, 60 );
     delay(250);
     GD.play( MUSICBOX, 60 );
@@ -181,7 +174,7 @@ void jingle( int n = 0 ) {
     GD.play( MUSICBOX, 60 );
     delay(500);
     GD.play( MUTE );
-  } else if( n == 2 ) {
+  } else if ( n == 2 ) {
     GD.play( PIANO, 55 );
     delay(250);
     GD.play( PIANO, 64 );
@@ -197,58 +190,59 @@ std::map< int, String > cache;
 
 void parse_command( char* json ) {
   StaticJsonBuffer<1024> jsonBuffer;
-  
+
   JsonObject& root = jsonBuffer.parseObject(json);
-  
+
   const char* type = root["type"];
 
-  if( strcmp( type, "reset" ) == 0 ) {
+  if ( strcmp( type, "reset" ) == 0 ) {
     add_log("Running reset");
     state = CLOCK_STATE;
-  } else if( strcmp( type, "audio" ) == 0 ) {
+  } else if ( strcmp( type, "audio" ) == 0 ) {
     add_log("Playing audio");
     sample();
-  } else if( strcmp( type, "settime" ) == 0 ) {
+  } else if ( strcmp( type, "settime" ) == 0 ) {
     add_log("Setting the clock");
     int hour = root["hour"];
     int minute = root["minute"];
     String timestring = format_time( hour, minute, 0 );
     rtc.adjust(DateTime(__DATE__, string2char(timestring)));
-  } else if( strcmp( type, "events" ) == 0 ) {
+  } else if ( strcmp( type, "events" ) == 0 ) {
     add_log("Caching events");
     cache.clear();
-    for( int i=0; i < root["events"].size(); i++ ) {
+    for ( int i = 0; i < root["events"].size(); i++ ) {
       int hour = root["events"][i]["hour"];
       int minute = root["events"][i]["minute"];
       int second = root["events"][i]["second"];
-      int time = hour*10000+minute*100+second;
+      int time = hour * 10000 + minute * 100 + second;
       const char* task = root["events"][i]["task"];
       cache[ time ] = task;
     }
-  } else if( strcmp( type, "log" ) == 0 ) {
+  } else if ( strcmp( type, "log" ) == 0 ) {
     add_log("Showing log");
     state = SHOW_LOG_STATE;
-  } else if( strcmp( type, "plus" ) == 0 ) {
+  } else if ( strcmp( type, "plus" ) == 0 ) {
     add_log("Running plus");
     points++;
-  } else if( strcmp( type, "min" ) == 0 ) {
+  } else if ( strcmp( type, "min" ) == 0 ) {
     add_log("Running min");
     points--;
-  } else if( strcmp( type, "flo" ) == 0 ) {
-    add_log("Running flo");
-    ritual_done[ 0 ] = false;
-    ritual_done[ 1 ] = false;
-    ritual_done[ 2 ] = false;
-    ritual_done[ 3 ] = false;
-    state = FLO_STATE;
-  } else if( strcmp( type, "minne" ) == 0 ) {
-    add_log("Running minne");
-    ritual_done[ 0 ] = false;
-    ritual_done[ 1 ] = false;
-    ritual_done[ 2 ] = false;
-    ritual_done[ 3 ] = false;
-    state = MINNE_STATE;
-  } else if( strcmp( type, "timetimer" ) == 0 ) {
+  } else if ( strcmp( type, "todo" ) == 0 ) {
+    add_log("Running todo");
+    todo_texts[ 0 ] = (const char*)root["job"][0];
+    todo_jpgs[ 0 ] = job2jpg( todo_texts[ 0 ] );
+    todo_texts[ 1 ] = (const char*)root["job"][1];
+    todo_jpgs[ 1 ] = job2jpg( todo_texts[ 1 ] );
+    todo_texts[ 2 ] = (const char*)root["job"][2];
+    todo_jpgs[ 2 ] = job2jpg( todo_texts[ 2 ] );
+    todo_texts[ 3 ] = (const char*)root["job"][3];
+    todo_jpgs[ 3 ] = job2jpg( todo_texts[ 3 ] );
+    todo_done[ 0 ] = ( todo_texts[ 0 ] == "" );
+    todo_done[ 1 ] = ( todo_texts[ 1 ] == "" );
+    todo_done[ 2 ] = ( todo_texts[ 2 ] == "" );
+    todo_done[ 3 ] = ( todo_texts[ 3 ] == "" );
+    state = TODO_STATE;
+  } else if ( strcmp( type, "timetimer" ) == 0 ) {
     add_log("Running timetimer");
     int minutes = root["minutes"];
     Serial.print( "minutes: " );
@@ -260,12 +254,12 @@ void parse_command( char* json ) {
     time_timer = now.unixtime() + minutes * SECONDS_PER_MINUTE;
     state = TIME_TIMER_STATE;
     jingle(1);
-  } else if( strcmp( type, "reminder" ) == 0 ) {
+  } else if ( strcmp( type, "reminder" ) == 0 ) {
     add_log("Running reminder");
     const char* job = root["message"];
     strcpy(current_job_string, job);
     state = REMINDER_STATE;
-  } else if( strcmp( type, "alarm" ) == 0 ) {
+  } else if ( strcmp( type, "alarm" ) == 0 ) {
     add_log("Running alarm");
     const char* job = root["message"];
     strcpy(current_job_string, job);
@@ -288,25 +282,25 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
 long lastReconnectAttempt = 0;
 void mqttOnlineCheck() {
-  if(!client.connected()) {
+  if (!client.connected()) {
     long now = millis();
     if (now - lastReconnectAttempt > 5000) {
       lastReconnectAttempt = now;
       client.setServer(mqttServer, mqttPort);
       client.setCallback(mqttCallback);
-    
+
       add_log("Connecting to MQTT ...");
-   
+
       if (client.connect("AnthonysLittleClient" )) {
-   
+
         add_log("Connected to MQTT");
         client.subscribe(mqttTopic);
-   
+
       } else {
-   
+
         add_log("MQTT connect failed");
         // add_log(client.state());
-   
+
       }
     }
   }
@@ -372,6 +366,9 @@ void load_jpgs()
   GD.BitmapHandle(WASMAND_JPG);
   GD.cmd_loadimage(-1, 0);
   GD.load("WASMAND.jpg");
+  GD.BitmapHandle(UNKNOWN_JPG);
+  GD.cmd_loadimage(-1, 0);
+  GD.load("UNKNOWN.jpg");
 }
 
 void setup() {
@@ -384,8 +381,11 @@ void setup() {
   //GD.cmd_regwrite(REG_VOL_PB, 127);
   //GD.cmd_regwrite(REG_VOL_SOUND, 127);
 
-  LOAD_ASSETS();
   add_log("Gameduino started");
+
+  add_log("Loading sounds ...");
+  LOAD_ASSETS();
+  add_log("Sounds loaded");
 
   add_log("Loading JPGs ...");
   load_jpgs();
@@ -414,9 +414,9 @@ void setup() {
   // rtc.adjust(DateTime(__DATE__, __TIME__));
 
   add_log( "MiFlo has booted successfully!" );
-  
+
   state = CLOCK_STATE;
-  
+
 }
 
 String format_time( int hour, int minute, int second ) {
@@ -438,11 +438,11 @@ void show_clock() {
   GD.Begin(POINTS);
   GD.ColorA(64);
   GD.ColorRGB(COLOR_BEIGE);
-  for( int i = 0; i < points; i++ ) {
+  for ( int i = 0; i < points; i++ ) {
     GD.PointSize(16 * sqrt( i + 1 ) * 5 );
     GD.Vertex2ii(
-       100 * ( cos(animation_counter/float(100+i*73%101)) + cos(animation_counter/float(100+i*101%73)) )+GD.w/2,
-       40 * ( sin(animation_counter/float(100+i*103%89)) + cos(animation_counter/float(100+i*89%103)) )+GD.h/2
+      100 * ( cos(animation_counter / float(100 + i * 73 % 101)) + cos(animation_counter / float(100 + i * 101 % 73)) ) + GD.w / 2,
+      40 * ( sin(animation_counter / float(100 + i * 103 % 89)) + cos(animation_counter / float(100 + i * 89 % 103)) ) + GD.h / 2
     );
   }
   animation_counter++;
@@ -455,17 +455,17 @@ void show_clock() {
 
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 210:
-    state = UPCOMING_STATE;
-  break;
+    case 210:
+      state = UPCOMING_STATE;
+      break;
   }
 
-  if( cache.size() > 0 ) {
+  if ( cache.size() > 0 ) {
     GD.ColorRGB(COLOR_BEIGE);
     GD.cmd_fgcolor(COLOR_BLACK);
     GD.ColorA(128);
     GD.Tag(210);
-    GD.cmd_button( 20, GD.h-40, 20, 20, 20, OPT_FLAT, int2char(cache.size()) );
+    GD.cmd_button( 20, GD.h - 40, 20, 20, 20, OPT_FLAT, int2char(cache.size()) );
     GD.ColorA(255);
   }
 
@@ -480,28 +480,28 @@ static void clock_ray(int centerx, int centery, int &x, int &y, int r, double i)
 }
 
 void show_time_timer( double minutes, int centerx, int centery, int scale ) {
-   int x, y;
+  int x, y;
 
   GD.Begin(POINTS);
   GD.ColorRGB(COLOR_BLACK);
 
   // time-timer labels
   /*const char *labels[] = {"0","55","50","45","40","35","30","25","20","15","10","5"};
-  int align[12] = { OPT_CENTERX, 0, 0, 0, OPT_RIGHTX, OPT_RIGHTX, OPT_RIGHTX, 0, 0, 0, 0, 0 };
-  for (int i = 0; i < 12; i++) {
+    int align[12] = { OPT_CENTERX, 0, 0, 0, OPT_RIGHTX, OPT_RIGHTX, OPT_RIGHTX, 0, 0, 0, 0, 0 };
+    for (int i = 0; i < 12; i++) {
     clock_ray(centerx, centery, x, y, 16 * scale, i*5);
     GD.cmd_text(x >> 4, y >> 4, 26, OPT_CENTER, labels[i]);
-  }*/
+    }*/
   clock_ray(centerx, centery, x, y, 16 * scale * 1.1, -minutes);
   char minute_str[16];
   itoa((int)(minutes + 0.99), minute_str, 10);
   GD.cmd_text(x >> 4, y >> 4, 28, OPT_CENTER, minute_str);
-  
+
   // clockface
   GD.LineWidth(8);
   GD.Begin(LINES);
   for (int i = 0; i < 60; i++) {
-    if( i % 5 == 0 ) {
+    if ( i % 5 == 0 ) {
       clock_ray(centerx, centery, x, y, 16 * scale * 0.9, i);
       GD.Vertex2f(x, y);
       clock_ray(centerx, centery, x, y, 16 * scale * 0.8, i);
@@ -515,13 +515,13 @@ void show_time_timer( double minutes, int centerx, int centery, int scale ) {
   }
 
   // time-timer
-  if( minutes > 0 ) {
+  if ( minutes > 0 ) {
     Poly po;
     po.begin();
     po.v(centerx * 16, centery * 16);
-    clock_ray(centerx, centery, x, y, 16* scale * 0.7, 60 - minutes);
+    clock_ray(centerx, centery, x, y, 16 * scale * 0.7, 60 - minutes);
     po.v(x, y);
-    clock_ray(centerx, centery, x, y, 16* scale * 0.7, (int)( 60 - minutes + 1 ));
+    clock_ray(centerx, centery, x, y, 16 * scale * 0.7, (int)( 60 - minutes + 1 ));
     po.v(x, y);
     GD.ColorRGB(COLOR_RED);
     po.draw();
@@ -529,60 +529,60 @@ void show_time_timer( double minutes, int centerx, int centery, int scale ) {
       Poly po;
       po.begin();
       po.v(centerx * 16, centery * 16);
-      clock_ray(centerx, centery, x, y, 16* scale * 0.7, i + 1.1);
+      clock_ray(centerx, centery, x, y, 16 * scale * 0.7, i + 1.1);
       po.v(x, y);
-      clock_ray(centerx, centery, x, y, 16* scale * 0.7, i - 0.1);
+      clock_ray(centerx, centery, x, y, 16 * scale * 0.7, i - 0.1);
       po.v(x, y);
       GD.ColorRGB(COLOR_RED);
       po.draw();
     }
   }
- 
+
 }
 
 int job2jpg( String job ) {
-  if( job == "bril" )
+  if ( job == "bril" )
     return BRIL_JPG;
-  else if( job == "douchen" )
+  else if ( job == "douchen" )
     return DOUCHEN_JPG;
-  else if( job == "haar" )
+  else if ( job == "haar" )
     return HAAR_JPG;
-  else if( job == "huiswerk" )
+  else if ( job == "huiswerk" )
     return HUISWERK_JPG;
-  else if( job == "kaka" )
+  else if ( job == "kaka" )
     return KAKA_JPG;
-  else if( job == "kine" )
+  else if ( job == "kine" )
     return KINE_JPG;
-  else if( job == "klussen" )
+  else if ( job == "klussen" )
     return KLUSSEN_JPG;
-  else if( job == "opruimen" )
+  else if ( job == "opruimen" )
     return LEGOPRUM_JPG;
-  else if( job == "lezen" )
+  else if ( job == "lezen" )
     return LEZEN_JPG;
-  else if( job == "nagels" )
+  else if ( job == "nagels" )
     return NAGELS_JPG;
-  else if( job == "nopanic" )
+  else if ( job == "nopanic" )
     return NOPANIC_JPG;
-  else if( job == "pillen" )
+  else if ( job == "pillen" )
     return PILLEN_JPG;
-  else if( job == "pipikaka" )
+  else if ( job == "pipikaka" )
     return PIPIKAKA_JPG;
-  else if( job == "pompen" )
+  else if ( job == "pompen" )
     return POMPEN_JPG;
-  else if( job == "pyjama" )
+  else if ( job == "pyjama" )
     return PYJAMA_JPG;
-  else if( job == "tanden" )
+  else if ( job == "tanden" )
     return TANDEN_JPG;
-  else if( job == "uitmesten" )
+  else if ( job == "uitmesten" )
     return UITMEST_JPG;
-  else if( job == "wasmand" )
+  else if ( job == "wasmand" )
     return WASMAND_JPG;
   return -1;
 }
 
 void display_time_timer( double minutes ) {
   int jpg = job2jpg( current_job_string );
-  if( jpg != -1 ) {
+  if ( jpg != -1 ) {
     GD.Begin(BITMAPS);
     GD.ColorRGB(COLOR_BEIGE);
     GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, jpg );
@@ -598,10 +598,10 @@ void display_time_timer( double minutes ) {
 void run_time_timer() {
 
   DateTime now = rtc.now();
-  double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
+  double minutes = (time_timer - now.unixtime()) / (double)SECONDS_PER_MINUTE;
   display_time_timer( minutes );
-  if( now.unixtime() >= time_timer ) { 
-    state = FINISHED_STATE; 
+  if ( now.unixtime() >= time_timer ) {
+    state = FINISHED_STATE;
   }
 }
 
@@ -610,30 +610,30 @@ void show_timer_finished() {
 
   DateTime now = rtc.now();
 
-  if( now.unixtime() >= next_alarm_bleep ) {
+  if ( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
     jingle();
   }
-  
+
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 201:
-    strcpy(current_job_string, "");
-    points++;
-    goed1 = rand() % 16;
-    goed2 = rand() % 16;
-    state = GOED_GEDAAN_STATE;
-    delay(200);
-  break;
+    case 201:
+      strcpy(current_job_string, "");
+      points++;
+      goed1 = rand() % 16;
+      goed2 = rand() % 16;
+      state = GOED_GEDAAN_STATE;
+      delay(200);
+      break;
   }
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_GREEN);
   GD.Tag(201);
-  GD.cmd_button( GD.w - 90, GD.h-60, 80, 50, 27, OPT_FLAT, "OK" );
+  GD.cmd_button( GD.w - 90, GD.h - 60, 80, 50, 27, OPT_FLAT, "OK" );
 
   display_time_timer( 0 );
-//  show_time_timer( 0, GD.w / 2, GD.h / 2, 100 );
+  //  show_time_timer( 0, GD.w / 2, GD.h / 2, 100 );
 
 }
 
@@ -642,14 +642,14 @@ void statusbar( int hour, int minute, int second ) {
   GD.ColorA(128);
 
   // update WiFi status
-  if( WiFi.status() == WL_CONNECTED ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
+  if ( WiFi.status() == WL_CONNECTED ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
   GD.cmd_text(5, 5, 20, 0, "Wifi");
   // update MQTT status
   client.loop();
-  if( client.connected() ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
+  if ( client.connected() ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
   GD.cmd_text(25, 5, 20, 0, "MQTT");
   GD.ColorRGB(COLOR_BEIGE);
-  GD.cmd_text(GD.w/2, 12, 20, OPT_CENTER, person);
+  GD.cmd_text(GD.w / 2, 12, 20, OPT_CENTER, person);
 
   String time = format_time( hour, minute, second );
   GD.ColorRGB(COLOR_BLACK);
@@ -660,71 +660,71 @@ void statusbar( int hour, int minute, int second ) {
 void show_reminder(String job) {
   DateTime now = rtc.now();
 
-  if( now.unixtime() >= next_alarm_bleep ) {
+  if ( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
     jingle();
   }
-  
+
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 201:
-    sample();
-    state = CLOCK_STATE;
-    points++;
-  break;
+    case 201:
+      sample();
+      state = CLOCK_STATE;
+      points++;
+      break;
   }
 
   GD.ColorRGB(COLOR_BLACK);
-  GD.cmd_text(GD.w / 2, GD.h / 2-40, 28, OPT_CENTER, "Niet vergeten!");
+  GD.cmd_text(GD.w / 2, GD.h / 2 - 40, 28, OPT_CENTER, "Niet vergeten!");
   GD.cmd_text(GD.w / 2, GD.h / 2, 29, OPT_CENTER, string2char(job));
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_GREEN);
   GD.Tag(201);
-  GD.cmd_button( GD.w / 2 - 200, GD.h-60, 400, 50, 27, OPT_FLAT, "OK, ik zal het niet vergeten" );
+  GD.cmd_button( GD.w / 2 - 200, GD.h - 60, 400, 50, 27, OPT_FLAT, "OK, ik zal het niet vergeten" );
 }
 
 void show_alarm(String job) {
   DateTime now = rtc.now();
 
-  if( now.unixtime() >= next_alarm_bleep ) {
+  if ( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 2;
     jingle();
   }
-  
+
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 201:
-    sample();
-    state = CLOCK_STATE;
-    points++;
-  break;
+    case 201:
+      sample();
+      state = CLOCK_STATE;
+      points++;
+      break;
   }
 
   GD.ColorRGB(COLOR_BLACK);
-  GD.cmd_text(GD.w / 2, GD.h / 2-40, 28, OPT_CENTER, "Alarm!");
+  GD.cmd_text(GD.w / 2, GD.h / 2 - 40, 28, OPT_CENTER, "Alarm!");
   GD.cmd_text(GD.w / 2, GD.h / 2, 29, OPT_CENTER, string2char(job));
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_GREEN);
   GD.Tag(201);
-  GD.cmd_button( GD.w / 2 - 200, GD.h-60, 400, 50, 27, OPT_FLAT, "OK" );
+  GD.cmd_button( GD.w / 2 - 200, GD.h - 60, 400, 50, 27, OPT_FLAT, "OK" );
 }
 
 void show_upcoming_events() {
-  
+
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 211:
-    state = CLOCK_STATE;
-  break;
+    case 211:
+      state = CLOCK_STATE;
+      break;
   }
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_text(20, 30, 22, 0, "Upcoming calendar events");
   int x = 0;
-  for( std::map<int, String>::iterator i = cache.begin(); i != cache.end(); i++ ) {
-    GD.cmd_text(20, 60 + x * 20, 20, 0, string2char( format_time( i->first/10000, (i->first/100)%100, i->first%100 ) ) );
+  for ( std::map<int, String>::iterator i = cache.begin(); i != cache.end(); i++ ) {
+    GD.cmd_text(20, 60 + x * 20, 20, 0, string2char( format_time( i->first / 10000, (i->first / 100) % 100, i->first % 100 ) ) );
     GD.cmd_text(80, 60 + x * 20, 20, 0, string2char(i->second));
     x++;
   }
@@ -732,64 +732,71 @@ void show_upcoming_events() {
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_GREEN);
   GD.Tag(211);
-  GD.cmd_button( GD.w / 2 + 100, GD.h-60, 100, 50, 27, OPT_FLAT, "OK" );
+  GD.cmd_button( GD.w / 2 + 100, GD.h - 60, 100, 50, 27, OPT_FLAT, "OK" );
 }
 
 void show_goed_gedaan() {
-  
+
   GD.get_inputs();
   switch (GD.inputs.tag) {
-  case 201:
-    sample();
-    state = CLOCK_STATE;
-  break;
+    case 201:
+      sample();
+      state = CLOCK_STATE;
+      break;
   }
 
   GD.ColorRGB(COLOR_BEIGE);
-  GD.cmd_text(GD.w / 2, GD.h / 2-80, 28, OPT_CENTER, "Dat deed je");
+  GD.cmd_text(GD.w / 2, GD.h / 2 - 80, 28, OPT_CENTER, "Dat deed je");
   int r = rand() % GOED_AANTAL;
-  GD.cmd_text(GD.w / 2, GD.h / 2-25, 31, OPT_CENTER, goed[ goed1 ]);
-  GD.cmd_text(GD.w / 2, GD.h / 2+25, 31, OPT_CENTER, goed[ goed2 ]);
+  GD.cmd_text(GD.w / 2, GD.h / 2 - 25, 31, OPT_CENTER, goed[ goed1 ]);
+  GD.cmd_text(GD.w / 2, GD.h / 2 + 25, 31, OPT_CENTER, goed[ goed2 ]);
 
   GD.ColorRGB(COLOR_BLACK);
   GD.cmd_fgcolor(COLOR_BEIGE);
   GD.Tag(201);
-  GD.cmd_button( GD.w / 2 - 200, GD.h-60, 400, 50, 27, OPT_FLAT, "Graag gedaan!" );
+  GD.cmd_button( GD.w / 2 - 200, GD.h - 60, 400, 50, 27, OPT_FLAT, "Graag gedaan!" );
 }
 
-void show_todo( int x, int y, int person, int job, int tag ) {
-  GD.Begin(BITMAPS);
-  GD.ColorRGB(COLOR_BEIGE);
-  if( ritual_done[ job ] ) GD.ColorA(32); else GD.ColorA(255);
-  GD.Tag(tag);
-  GD.Vertex2ii(x, y, ritual_images[ person ][ job ] );
-  GD.ColorRGB(COLOR_BLACK);
-  GD.cmd_text(x+50, y+110, 28, OPT_CENTER, ritual_texts[ person ][ job ]);
-  if( ritual_done[ job ] ) {
-    GD.Begin(LINE_STRIP);
-    GD.ColorA(255); 
-    GD.LineWidth(16 * 10);
-    GD.ColorRGB(COLOR_GREEN);
-    GD.Vertex2ii(x + 20, y + 50);
-    GD.Vertex2ii(x + 50, y + 80);
-    GD.Vertex2ii(x + 80, y + 10);
+void show_todo_icon( int x, int y, int job, int tag ) {
+  if( todo_texts[ job ] != "" ) {
+    GD.Begin(BITMAPS);
+    GD.ColorRGB(COLOR_BEIGE);
+    if ( todo_done[ job ] ) GD.ColorA(32); else GD.ColorA(255);
+    GD.Tag(tag);
+    if( todo_jpgs[ job ] != -1 )
+      GD.Vertex2ii(x, y, todo_jpgs[ job ] );
+    else
+      GD.Vertex2ii(x, y, UNKNOWN_JPG );
+    GD.ColorRGB(COLOR_BLACK);
+    GD.cmd_text(x + 50, y + 110, 28, OPT_CENTER, string2char( todo_texts[ job ] ));
+    if ( todo_done[ job ] ) {
+      GD.Begin(LINE_STRIP);
+      GD.ColorA(255);
+      GD.LineWidth(16 * 10);
+      GD.ColorRGB(COLOR_GREEN);
+      GD.Vertex2ii(x + 20, y + 50);
+      GD.Vertex2ii(x + 50, y + 80);
+      GD.Vertex2ii(x + 80, y + 10);
+    }
+    GD.ColorA( 255 );
   }
-  GD.ColorA( 255 );
 }
 
-void show_todos( int person ) {
-  show_todo( 93, 20, person, 0, 100 );
-  show_todo( 287, 20, person, 1, 101 );
-  show_todo( 93, 140, person, 2, 102 );
-  show_todo( 287, 140, person, 3, 103 );
+void show_todo_icons() {
+  show_todo_icon( 93, 10, 0, 100 );
+  show_todo_icon( 287, 10, 1, 101 );
+  show_todo_icon( 93, 140, 2, 102 );
+  show_todo_icon( 287, 140, 3, 103 );
 
   GD.get_inputs();
-  if( GD.inputs.tag > 0 ) {
-    ritual_done[ GD.inputs.tag - 100 ] = not ritual_done[ GD.inputs.tag - 100 ];
+  if ( GD.inputs.tag > 0 ) {
+    if( !todo_done[ GD.inputs.tag - 100 ] )
+      sample();
+    todo_done[ GD.inputs.tag - 100 ] = not todo_done[ GD.inputs.tag - 100 ];
     delay(300);
   }
 
-  if( ritual_done[0] && ritual_done[1] && ritual_done[2] && ritual_done[3] ) {
+  if ( todo_done[0] && todo_done[1] && todo_done[2] && todo_done[3] ) {
     points += 4;
     goed1 = rand() % GOED_AANTAL;
     goed2 = rand() % GOED_AANTAL;
@@ -797,45 +804,41 @@ void show_todos( int person ) {
   }
 }
 
-void show_flo() {
-  show_todos( 0 );
-}
-
-void show_minne() {
+void show_todo() {
   DateTime now = rtc.now();
 
-  if( now.unixtime() >= next_alarm_bleep ) {
+  if ( now.unixtime() >= next_alarm_bleep ) {
     next_alarm_bleep = now.unixtime() + 30;
     jingle(2);
   }
-  
-  show_todos( 1 );
+
+  show_todo_icons( );
 }
 
 void loop() {
 
   DateTime now = rtc.now();
-  double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
+  double minutes = (time_timer - now.unixtime()) / (double)SECONDS_PER_MINUTE;
   int current_h = now.hour();
   int current_m = now.minute();
   int current_s = now.second();
-  
+
   // clear screen
   uint32_t bgcolor = COLOR_BEIGE;
   switch (state) {
     case CLOCK_STATE:
     case SHOW_LOG_STATE:
       bgcolor = COLOR_BLACK;
-    break;
+      break;
     case REMINDER_STATE:
       bgcolor = COLOR_YELLOW;
-    break;
+      break;
     case ALARM_STATE:
       bgcolor = COLOR_RED;
-    break;
+      break;
     case GOED_GEDAAN_STATE:
       bgcolor = COLOR_GREEN;
-    break;
+      break;
   }
   GD.ClearColorRGB(bgcolor);
   GD.Clear();
@@ -847,41 +850,38 @@ void loop() {
   switch (state) {
     case FINISHED_STATE:
       show_timer_finished();
-    break;
+      break;
     case REMINDER_STATE:
       show_reminder( current_job_string );
-    break;
+      break;
     case ALARM_STATE:
       show_alarm( current_job_string );
-    break;
+      break;
     case TIME_TIMER_STATE:
       run_time_timer();
-    break;
+      break;
     case UPCOMING_STATE:
       show_upcoming_events();
-    break;
+      break;
     case SHOW_LOG_STATE:
       GD.ColorRGB(COLOR_BEIGE);
       show_log();
-    break;
+      break;
     case CLOCK_STATE:
       int cache_time;
       cache_time = current_h * 10000 + current_m * 100 + current_s;
-      if( cache.count( cache_time ) ) {
+      if ( cache.count( cache_time ) ) {
         parse_command(string2char(cache[cache_time]));
         cache.erase(cache_time);
       }
       show_clock();
-    break;
-    case FLO_STATE:
-      show_flo();
-    break;
-    case MINNE_STATE:
-      show_minne();
-    break;
+      break;
+    case TODO_STATE:
+      show_todo();
+      break;
     case GOED_GEDAAN_STATE:
       show_goed_gedaan();
-    break;
+      break;
   }
 
   // bring the contents to the front

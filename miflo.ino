@@ -7,6 +7,20 @@
 #include <SPI.h>
 #include <GD2.h>
 
+#include "m_cool.h"
+#include "pitches.h"
+// notes in the melody:
+int melody[] = {
+  NOTE_C4, NOTE_G3, NOTE_G3, NOTE_A3, NOTE_G3, 0, NOTE_B3, NOTE_C4
+};
+
+// note durations: 4 = quarter note, 8 = eighth note, etc.:
+int noteDurations[] = {
+  4, 8, 8, 4, 4, 4, 4, 4
+};
+
+
+
 #include "settings.h"
 
 #include <ESP8266WiFi.h>
@@ -30,16 +44,13 @@ RTC_DS1307 rtc;
 #define COLOR_BLACK 0x030302
 #define COLOR_WHITE 0xffe9e6
 
-#define MUSICFILE   "product.ima"
-static Streamer stream;
-
 #define GOED_AANTAL 16
 char* goed[GOED_AANTAL] = { "fantastisch", "buitengewoon", "geweldig", "fenomenaal", "toverachtig", "wonderlijk", "uitstekend", "eersteklas", "opperbest", "excellent", "briljant", "grandioos", "machtig", "sensationeel", "volmaakt", "uitzonderlijk" };
 int goed1, goed2;
 
 int points = 1;
 
-enum State { CLOCK, TIME_TIMER, FINISHED, TOILET_REMINDER, DRINK_REMINDER, KINE_REMINDER, FLO, MINNE, GOED_GEDAAN, UPCOMING, SHOW_LOG };
+enum State { CLOCK, TIME_TIMER, FINISHED, REMINDER, FLO, MINNE, GOED_GEDAAN, UPCOMING, SHOW_LOG };
 State state = SHOW_LOG;
 long time_timer = 0;
 
@@ -76,7 +87,7 @@ char* ritual_texts[ 2 ][ 4 ] = {
 };
 bool ritual_done[ 4 ] = { false, false, false, false };
 
-char* timer_job = "";
+char current_job_string[200] = "";
 
 char* string2char(String s){
     if(s.length()!=0){
@@ -114,6 +125,44 @@ void show_log() {
     GD.cmd_text(5, 25 + x * 14, 20, 0, string2char(*i));
     x++;
   }
+}
+
+void playmelody() {
+  // iterate over the notes of the melody:
+  for (int thisNote = 0; thisNote < 8; thisNote++) {
+
+    // to calculate the note duration, take one second
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000 / noteDurations[thisNote];
+    tone(15, melody[thisNote], noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.10;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(15);
+  }
+}
+
+//int samplebases[26] = {F_DDUIM, F_WAUW, F_BOL, F_UITST, F_GO, F_KOMAAN, G_COOL, G_FORMID, G_MACHTI, G_STIEVA, G_WOEW, G_DDUIM2, G_GOED, G_SUPER, G_WOOP, G_ALLEZ, G_DEMAX, G_GOEDZO, G_PRIMA, G_TSJING, G_ZOGOED, G_BOL, G_FANTAS, G_HOPLA, G_SCOOL, G_WIII};
+//int samplefreqs[26] = {F_DDUIM_FREQ, F_WAUW_FREQ, F_BOL_FREQ, F_UITST_FREQ, F_GO_FREQ, F_KOMAAN_FREQ, G_COOL_FREQ, G_FORMID_FREQ, G_MACHTI_FREQ, G_STIEVA_FREQ, G_WOEW_FREQ, G_DDUIM2_FREQ, G_GOED_FREQ, G_SUPER_FREQ, G_WOOP_FREQ, G_ALLEZ_FREQ, G_DEMAX_FREQ, G_GOEDZO_FREQ, G_PRIMA_FREQ, G_TSJING_FREQ, G_ZOGOED_FREQ, G_BOL_FREQ, G_FANTAS_FREQ, G_HOPLA_FREQ, G_SCOOL_FREQ, G_WIII_FREQ};
+//int samplelengths[26] = {F_DDUIM_LENGTH, F_WAUW_LENGTH, F_BOL_LENGTH, F_UITST_LENGTH, F_GO_LENGTH, F_KOMAAN_LENGTH, G_COOL_LENGTH, G_FORMID_LENGTH, G_MACHTI_LENGTH, G_STIEVA_LENGTH, G_WOEW_LENGTH, G_DDUIM2_LENGTH, G_GOED_LENGTH, G_SUPER_LENGTH, G_WOOP_LENGTH, G_ALLEZ_LENGTH, G_DEMAX_LENGTH, G_GOEDZO_LENGTH, G_PRIMA_LENGTH, G_TSJING_LENGTH, G_ZOGOED_LENGTH, G_BOL_LENGTH, G_FANTAS_LENGTH, G_HOPLA_LENGTH, G_SCOOL_LENGTH, G_WIII_LENGTH};
+int samplebases[20] = {G_COOL, G_FORMID, G_MACHTI, G_STIEVA, G_WOEW, G_DDUIM2, G_GOED, G_SUPER, G_WOOP, G_ALLEZ, G_DEMAX, G_GOEDZO, G_PRIMA, G_TSJING, G_ZOGOED, G_BOL, G_FANTAS, G_HOPLA, G_SCOOL, G_WIII};
+int samplefreqs[20] = {G_COOL_FREQ, G_FORMID_FREQ, G_MACHTI_FREQ, G_STIEVA_FREQ, G_WOEW_FREQ, G_DDUIM2_FREQ, G_GOED_FREQ, G_SUPER_FREQ, G_WOOP_FREQ, G_ALLEZ_FREQ, G_DEMAX_FREQ, G_GOEDZO_FREQ, G_PRIMA_FREQ, G_TSJING_FREQ, G_ZOGOED_FREQ, G_BOL_FREQ, G_FANTAS_FREQ, G_HOPLA_FREQ, G_SCOOL_FREQ, G_WIII_FREQ};
+int samplelengths[20] = {G_COOL_LENGTH, G_FORMID_LENGTH, G_MACHTI_LENGTH, G_STIEVA_LENGTH, G_WOEW_LENGTH, G_DDUIM2_LENGTH, G_GOED_LENGTH, G_SUPER_LENGTH, G_WOOP_LENGTH, G_ALLEZ_LENGTH, G_DEMAX_LENGTH, G_GOEDZO_LENGTH, G_PRIMA_LENGTH, G_TSJING_LENGTH, G_ZOGOED_LENGTH, G_BOL_LENGTH, G_FANTAS_LENGTH, G_HOPLA_LENGTH, G_SCOOL_LENGTH, G_WIII_LENGTH};
+
+void sample() {
+  GD.play(UNMUTE);
+  uint32_t base, len, freq;
+  int i = rand() % 20;
+  base = samplebases[i];
+  len = samplelengths[i];
+  freq = samplefreqs[i];
+  GD.sample(base, len, freq, ADPCM_SAMPLES);
+  delay(2000*len/freq);
+  GD.play(MUTE);
 }
 
 void jingle( int n = 0 ) {
@@ -157,7 +206,7 @@ void parse_command( char* json ) {
     state = CLOCK;
   } else if( strcmp( type, "audio" ) == 0 ) {
     add_log("Playing audio");
-    stream.begin(MUSICFILE);
+    sample();
   } else if( strcmp( type, "settime" ) == 0 ) {
     add_log("Setting the clock");
     int hour = root["hour"];
@@ -204,12 +253,17 @@ void parse_command( char* json ) {
     Serial.print( "minutes: " );
     Serial.println( minutes );
     const char* job = root["job"];
-    strcpy(timer_job, job);
+    strcpy(current_job_string, job);
     add_log( job );
     DateTime now = rtc.now();
     time_timer = now.unixtime() + minutes * SECONDS_PER_MINUTE;
     state = TIME_TIMER;
     jingle(1);
+  } else if( strcmp( type, "reminder" ) == 0 ) {
+    add_log("Running reminder");
+    const char* job = root["message"];
+    strcpy(current_job_string, job);
+    state = REMINDER;
   }
 }
 
@@ -256,7 +310,7 @@ void load_jpgs()
 {
 
   GD.BitmapHandle(BRIL_JPG);
-  GD.cmd_loadimage(0, 0);
+  GD.cmd_loadimage(ASSETS_END, 0);
   GD.load("BRIL.jpg");
   GD.BitmapHandle(DOUCHEN_JPG);
   GD.cmd_loadimage(-1, 0);
@@ -321,8 +375,10 @@ void setup() {
   GD.begin();
   GD.play( MUTE );
   GD.cmd_setrotate(0);
-  GD.cmd_regwrite(REG_VOL_PB, 127);
-  GD.cmd_regwrite(REG_VOL_SOUND, 127);
+  //GD.cmd_regwrite(REG_VOL_PB, 127);
+  //GD.cmd_regwrite(REG_VOL_SOUND, 127);
+
+  LOAD_ASSETS();
   add_log("Gameduino started");
 
   add_log("Loading JPGs ...");
@@ -491,11 +547,12 @@ void show_timer_finished() {
   GD.get_inputs();
   switch (GD.inputs.tag) {
   case 201:
+    strcpy(current_job_string, "");
     points++;
     goed1 = rand() % 16;
     goed2 = rand() % 16;
     state = GOED_GEDAAN;
-    stream.begin(MUSICFILE);
+    sample();
     delay(200);
   break;
   }
@@ -540,6 +597,7 @@ void show_reminder(String job) {
   GD.get_inputs();
   switch (GD.inputs.tag) {
   case 201:
+    sample();
     state = CLOCK;
     points++;
   break;
@@ -577,42 +635,6 @@ void show_upcoming_events() {
   GD.cmd_fgcolor(COLOR_GREEN);
   GD.Tag(211);
   GD.cmd_button( GD.w / 2 + 100, GD.h-60, 100, 50, 27, OPT_FLAT, "OK" );
-}
-
-bool kine_done = false;
-void kine_reminder(String job) {
-  DateTime now = rtc.now();
-
-  if( now.unixtime() >= next_alarm_bleep ) {
-    next_alarm_bleep = now.unixtime() + 2;
-    jingle();
-  }
-  
-  GD.get_inputs();
-  switch (GD.inputs.tag) {
-  case 201:
-    state = CLOCK;
-  break;
-  case 202:
-    kine_done = true;
-    DateTime now = rtc.now();
-    time_timer = now.unixtime() + 10 * SECONDS_PER_MINUTE;
-    strcpy(timer_job, "kine");
-    state = TIME_TIMER;
-  break;
-  }
-
-  GD.ColorRGB(COLOR_BLACK);
-  GD.cmd_text(GD.w / 2, GD.h / 2-40, 28, OPT_CENTER, "Niet vergeten!");
-  GD.cmd_text(GD.w / 2, GD.h / 2, 31, OPT_CENTER, string2char(job));
-
-  GD.ColorRGB(COLOR_BLACK);
-  GD.cmd_fgcolor(COLOR_RED);
-  GD.Tag(201);
-  GD.cmd_button( GD.w / 2 - 200, GD.h-60, 180, 50, 27, OPT_FLAT, "Ik doe het later" );
-  GD.cmd_fgcolor(COLOR_GREEN);
-  GD.Tag(202);
-  GD.cmd_button( GD.w / 2 + 20, GD.h-60, 180, 50, 27, OPT_FLAT, "We doen het nu!" );
 }
 
 void show_goed_gedaan() {
@@ -699,12 +721,12 @@ void run_time_timer() {
   int current_m = now.minute();
   int current_s = now.second();
 
-  if( strcmp( timer_job, "kine" ) == 0 ) {
+  if( strcmp( current_job_string, "kine" ) == 0 ) {
     GD.Begin(BITMAPS);
     GD.ColorRGB(COLOR_BEIGE);
     GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, KINE_JPG );
     GD.ColorRGB(COLOR_BLACK);
-    GD.cmd_text(GD.w / 2 + GD.w / 4, GD.h / 2 + 60, 28, OPT_CENTER, timer_job);
+    GD.cmd_text(GD.w / 2 + GD.w / 4, GD.h / 2 + 60, 28, OPT_CENTER, current_job_string);
     show_time_timer( minutes, GD.w / 2 - GD.w / 4 + 50, GD.h / 2, 100 );
   } else
     show_time_timer( minutes, GD.w / 2, GD.h / 2, 100 );
@@ -722,9 +744,7 @@ void loop() {
     case SHOW_LOG:
       bgcolor = COLOR_BLACK;
     break;
-    case TOILET_REMINDER:
-    case DRINK_REMINDER:
-    case KINE_REMINDER:
+    case REMINDER:
       bgcolor = COLOR_YELLOW;
     break;
     case GOED_GEDAAN:
@@ -748,14 +768,8 @@ void loop() {
     case FINISHED:
       show_timer_finished();
     break;
-    case TOILET_REMINDER:
-      show_reminder( "Moet je naar toilet?" );
-    break;
-    case DRINK_REMINDER:
-      show_reminder( "Drink je genoeg?" );
-    break;
-    case KINE_REMINDER:
-      kine_reminder( "Is je kine gedaan?" );
+    case REMINDER:
+      show_reminder( current_job_string );
     break;
     case TIME_TIMER:
       run_time_timer();
@@ -775,10 +789,10 @@ void loop() {
         cache.erase(cache_time);
       }
       show_clock();
-      if( ( current_m == 13 ) && ( current_s == 37 ) ) state = TOILET_REMINDER;
-      if( ( current_m == 37 ) && ( current_s == 13 ) ) state = DRINK_REMINDER;
-      if( !kine_done && ( current_m == 15 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
-      if( !kine_done && ( current_m == 40 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
+//      if( ( current_m == 13 ) && ( current_s == 37 ) ) state = TOILET_REMINDER;
+//      if( ( current_m == 37 ) && ( current_s == 13 ) ) state = DRINK_REMINDER;
+//      if( !kine_done && ( current_m == 15 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
+//      if( !kine_done && ( current_m == 40 ) && ( current_s == 00 ) ) state = KINE_REMINDER;
     break;
     case FLO:
       show_flo();
@@ -796,11 +810,6 @@ void loop() {
 
   // make sure we're still connected to MQTT
   mqttOnlineCheck();
-  // keep the audio streamer going
-  uint16_t val, range;
-  stream.progress(val, range);
-  if( val < range )
-    stream.feed();
   // keep generating random numbers to mess with the seed
   rand();
 

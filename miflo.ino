@@ -73,7 +73,8 @@ enum JPG {
   PYJAMA_JPG,
   TANDEN_JPG,
   UITMEST_JPG,
-  WASMAND_JPG
+  WASMAND_JPG,
+  BUFFER_JPG
 };
 
 JPG ritual_images[ 2 ][ 4 ] = {
@@ -539,6 +540,71 @@ void show_time_timer( double minutes, int centerx, int centery, int scale ) {
  
 }
 
+int job2jpg( String job ) {
+  if( job == "bril" )
+    return BRIL_JPG;
+  else if( job == "douchen" )
+    return DOUCHEN_JPG;
+  else if( job == "haar" )
+    return HAAR_JPG;
+  else if( job == "huiswerk" )
+    return HUISWERK_JPG;
+  else if( job == "kaka" )
+    return KAKA_JPG;
+  else if( job == "kine" )
+    return KINE_JPG;
+  else if( job == "klussen" )
+    return KLUSSEN_JPG;
+  else if( job == "opruimen" )
+    return LEGOPRUM_JPG;
+  else if( job == "lezen" )
+    return LEZEN_JPG;
+  else if( job == "nagels" )
+    return NAGELS_JPG;
+  else if( job == "nopanic" )
+    return NOPANIC_JPG;
+  else if( job == "pillen" )
+    return PILLEN_JPG;
+  else if( job == "pipikaka" )
+    return PIPIKAKA_JPG;
+  else if( job == "pompen" )
+    return POMPEN_JPG;
+  else if( job == "pyjama" )
+    return PYJAMA_JPG;
+  else if( job == "tanden" )
+    return TANDEN_JPG;
+  else if( job == "uitmesten" )
+    return UITMEST_JPG;
+  else if( job == "wasmand" )
+    return WASMAND_JPG;
+  return -1;
+}
+
+void display_time_timer( double minutes ) {
+  int jpg = job2jpg( current_job_string );
+  if( jpg != -1 ) {
+    GD.Begin(BITMAPS);
+    GD.ColorRGB(COLOR_BEIGE);
+    GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, jpg );
+    GD.ColorRGB(COLOR_BLACK);
+    GD.cmd_text(GD.w / 2 + GD.w / 4, GD.h / 2 + 60, 28, OPT_CENTER, current_job_string);
+    show_time_timer( minutes, GD.w / 2 - GD.w / 4 + 50, GD.h / 2, 100 );
+  } else {
+    GD.cmd_text(GD.w / 2, GD.h - 20, 28, OPT_CENTER, current_job_string);
+    show_time_timer( minutes, GD.w / 2 - 10, GD.h / 2, 100 );
+  }
+}
+
+void run_time_timer() {
+
+  DateTime now = rtc.now();
+  double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
+  display_time_timer( minutes );
+  if( now.unixtime() >= time_timer ) { 
+    state = FINISHED_STATE; 
+  }
+}
+
 long next_alarm_bleep = 0;
 void show_timer_finished() {
 
@@ -566,7 +632,8 @@ void show_timer_finished() {
   GD.Tag(201);
   GD.cmd_button( GD.w - 90, GD.h-60, 80, 50, 27, OPT_FLAT, "OK" );
 
-  show_time_timer( 0, GD.w / 2, GD.h / 2, 100 );
+  display_time_timer( 0 );
+//  show_time_timer( 0, GD.w / 2, GD.h / 2, 100 );
 
 }
 
@@ -743,28 +810,6 @@ void show_minne() {
   }
   
   show_todos( 1 );
-}
-
-void run_time_timer() {
-
-  DateTime now = rtc.now();
-  double minutes = (time_timer-now.unixtime())/(double)SECONDS_PER_MINUTE;
-  int current_h = now.hour();
-  int current_m = now.minute();
-  int current_s = now.second();
-
-  if( strcmp( current_job_string, "kine" ) == 0 ) {
-    GD.Begin(BITMAPS);
-    GD.ColorRGB(COLOR_BEIGE);
-    GD.Vertex2ii(GD.w / 2 + GD.w / 4 - 50, GD.h / 2 - 50, KINE_JPG );
-    GD.ColorRGB(COLOR_BLACK);
-    GD.cmd_text(GD.w / 2 + GD.w / 4, GD.h / 2 + 60, 28, OPT_CENTER, current_job_string);
-    show_time_timer( minutes, GD.w / 2 - GD.w / 4 + 50, GD.h / 2, 100 );
-  } else
-    show_time_timer( minutes, GD.w / 2, GD.h / 2, 100 );
-  if( now.unixtime() >= time_timer ) { 
-    state = FINISHED_STATE; 
-  }
 }
 
 void loop() {

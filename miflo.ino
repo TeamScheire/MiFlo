@@ -875,6 +875,7 @@ void loop() {
         cache.erase(cache_time);
       }
       show_clock();
+      if( current_h == 1 ) points = 1;
       break;
     case TODO_STATE:
       show_todo();

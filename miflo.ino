@@ -224,6 +224,7 @@ void parse_command( char* json ) {
   } else if ( strcmp( type, "plus" ) == 0 ) {
     add_log("Running plus");
     points++;
+    sample();
   } else if ( strcmp( type, "min" ) == 0 ) {
     add_log("Running min");
     points--;

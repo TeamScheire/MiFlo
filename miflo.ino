@@ -672,6 +672,9 @@ void statusbar( int hour, int minute, int second ) {
   GD.ColorA(255);
 }
 
+bool play_sample_next = false;
+bool play_sample_next_next = false; // dirty, dirty hack but I must move fast
+
 void show_reminder(String job) {
   DateTime now = rtc.now();
 
@@ -683,7 +686,7 @@ void show_reminder(String job) {
   GD.get_inputs();
   switch (GD.inputs.tag) {
     case 201:
-      sample();
+      play_sample_next = true;
       state = CLOCK_STATE;
       points++;
       break;
@@ -710,7 +713,7 @@ void show_alarm(String job) {
   GD.get_inputs();
   switch (GD.inputs.tag) {
     case 201:
-      sample();
+      play_sample_next = true;
       state = CLOCK_STATE;
       points++;
       break;
@@ -755,9 +758,9 @@ void show_goed_gedaan() {
   GD.get_inputs();
   switch (GD.inputs.tag) {
     case 201:
-      sample();
+      play_sample_next = true;
       state = CLOCK_STATE;
-      break;
+    break;
   }
 
   GD.ColorRGB(COLOR_BEIGE);
@@ -797,8 +800,6 @@ void show_todo_icon( int x, int y, int job, int tag ) {
   }
 }
 
-bool play_sample_next = false;
-bool play_sample_next_next = false; // dirty, dirty hack but I must move fast
 void show_todo_icons() {
   show_todo_icon( 93, 10, 0, 100 );
   show_todo_icon( 287, 10, 1, 101 );

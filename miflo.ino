@@ -148,6 +148,7 @@ int samplefreqs[20] = {G_COOL_FREQ, G_FORMID_FREQ, G_MACHTI_FREQ, G_STIEVA_FREQ,
 int samplelengths[20] = {G_COOL_LENGTH, G_FORMID_LENGTH, G_MACHTI_LENGTH, G_STIEVA_LENGTH, G_WOEW_LENGTH, G_DDUIM2_LENGTH, G_GOED_LENGTH, G_SUPER_LENGTH, G_WOOP_LENGTH, G_ALLEZ_LENGTH, G_DEMAX_LENGTH, G_GOEDZO_LENGTH, G_PRIMA_LENGTH, G_TSJING_LENGTH, G_ZOGOED_LENGTH, G_BOL_LENGTH, G_FANTAS_LENGTH, G_HOPLA_LENGTH, G_SCOOL_LENGTH, G_WIII_LENGTH};
 
 void sample() {
+  digitalWrite(15, HIGH);
   GD.play(UNMUTE);
   uint32_t base, len, freq;
   int i = rand() % 20;
@@ -157,9 +158,11 @@ void sample() {
   GD.sample(base, len, freq, ADPCM_SAMPLES);
   delay(2000 * len / freq);
   GD.play(MUTE);
+  digitalWrite(15, LOW);
 }
 
 void jingle( int n = 0 ) {
+  digitalWrite(15, HIGH);
   if ( n == 0 ) {
     GD.play( MUSICBOX, 60 );
     delay(250);
@@ -183,6 +186,7 @@ void jingle( int n = 0 ) {
     delay(500);
     GD.play( MUTE );
   }
+  digitalWrite(15, LOW);
 }
 
 #include <map>
@@ -281,18 +285,18 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   parse_command(json);
 }
 
-long lastReconnectAttempt = 0;
+long lastMQTTReconnectAttempt = 0;
 void mqttOnlineCheck() {
   if (!client.connected()) {
     long now = millis();
-    if (now - lastReconnectAttempt > 5000) {
-      lastReconnectAttempt = now;
+    if (now - lastMQTTReconnectAttempt > 5000) {
+      lastMQTTReconnectAttempt = now;
       client.setServer(mqttServer, mqttPort);
       client.setCallback(mqttCallback);
 
       add_log("Connecting to MQTT ...");
 
-      if (client.connect("AnthonysLittleClient" )) {
+      if (client.connect(mqttClient)) {
 
         add_log("Connected to MQTT");
         client.subscribe(mqttTopic);
@@ -375,12 +379,14 @@ void load_jpgs()
 void setup() {
   Serial.begin(115200);
 
+  pinMode( 15, OUTPUT );
+
   Serial.println("Starting gameduino ...");
   GD.begin();
   GD.play( MUTE );
   GD.cmd_setrotate(0);
-  //GD.cmd_regwrite(REG_VOL_PB, 127);
-  //GD.cmd_regwrite(REG_VOL_SOUND, 127);
+  GD.cmd_regwrite(REG_VOL_PB, 255);
+  GD.cmd_regwrite(REG_VOL_SOUND, 255);
 
   add_log("Gameduino started");
 
@@ -546,6 +552,8 @@ int job2jpg( String job ) {
     return BRIL_JPG;
   else if ( job == "douchen" )
     return DOUCHEN_JPG;
+  else if ( job == "drinken" )
+    return DRINKEN_JPG;
   else if ( job == "haar" )
     return HAAR_JPG;
   else if ( job == "huiswerk" )
@@ -643,12 +651,18 @@ void statusbar( int hour, int minute, int second ) {
   GD.ColorA(128);
 
   // update WiFi status
-  if ( WiFi.status() == WL_CONNECTED ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
-  GD.cmd_text(5, 5, 20, 0, "Wifi");
+  //if ( WiFi.status() == WL_CONNECTED ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
+  //GD.cmd_text(5, 5, 20, 0, "Wifi");
   // update MQTT status
   client.loop();
-  if ( client.connected() ) GD.ColorRGB(COLOR_GREEN); else GD.ColorRGB(COLOR_RED);
-  GD.cmd_text(25, 5, 20, 0, "MQTT");
+  if ( client.connected() ) {
+    GD.ColorRGB(COLOR_GREEN); 
+    GD.cmd_text(5, 5, 20, 0, "Online");
+  } else {
+    GD.ColorRGB(COLOR_RED);
+    GD.cmd_text(5, 5, 20, 0, "Offline");
+  }
+    
   GD.ColorRGB(COLOR_BEIGE);
   GD.cmd_text(GD.w / 2, 12, 20, OPT_CENTER, person);
 

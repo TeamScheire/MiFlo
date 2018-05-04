@@ -797,6 +797,8 @@ void show_todo_icon( int x, int y, int job, int tag ) {
   }
 }
 
+bool play_sample_next = false;
+bool play_sample_next_next = false; // dirty, dirty hack but I must move fast
 void show_todo_icons() {
   show_todo_icon( 93, 10, 0, 100 );
   show_todo_icon( 287, 10, 1, 101 );
@@ -806,7 +808,7 @@ void show_todo_icons() {
   GD.get_inputs();
   if ( GD.inputs.tag > 0 ) {
     if( !todo_done[ GD.inputs.tag - 100 ] )
-      sample();
+      play_sample_next = true;
     todo_done[ GD.inputs.tag - 100 ] = not todo_done[ GD.inputs.tag - 100 ];
     delay(300);
   }
@@ -902,6 +904,13 @@ void loop() {
 
   // bring the contents to the front
   GD.swap();
+
+  // dirty hack to play a sample in the next frame
+  if( play_sample_next_next )
+    sample();
+  play_sample_next_next = play_sample_next;
+  play_sample_next = false;
+
 
   // make sure we're still connected to MQTT
   mqttOnlineCheck();

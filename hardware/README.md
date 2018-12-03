@@ -10,3 +10,5 @@ De hardware in de MiFlo is opgebouwd op eenvoudig verkrijgbare modules:
 
 
 We ontwierpen zelf een PCB die deze componenten allemaal bij elkaar brengt, deze vind je (als `.brd` en `.sch` files voor Autodesk EAGLE) in deze repository. Met de PCB kan je zowel een klassieke Arduino of een Adafruit Feather verbinden met het Gameduino touchscreen.
+
+Om de MiFlo mooi te bevestigen printten we kittenoortjes voor Minne en een Lego-helm voor Flo. Samen met 2 clips kan je de MiFlo zo bevestigen in de draagbare speakerkast. Je vindt deze STL files om zelf te printen als `kat.stl`, `legohelm.stl` en `clip.stl`.

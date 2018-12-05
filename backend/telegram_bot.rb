@@ -29,7 +29,8 @@ Telegram::Bot::Client.run(options.token) do |bot|
     
     when Telegram::Bot::Types::Message
       
-      if message.text.start_with?(options.person)
+      case message.text
+      when /^#{options.person} (.+)/
         json, bot_message = parse_event( $1 )
         if json != ""
           send_mqtt( "/iot/miflo/" + options.person + "/timer", json )

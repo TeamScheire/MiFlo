@@ -31,15 +31,19 @@ Get a Telegram bot up and running, acquire the token and run the MiFlo bot:
  bundle install
  ```
 * install mosquitto broker:
- * `sudo wget https://repo.mosquitto.org/debian/mosquitto-repo.gpg.key`
- * `sudo apt-key add mosquitto-repo.gpg.key`
- * `cd /etc/apt/sources.list.d/`
- * `sudo wget http://repo.mosquitto.org/debian/mosquitto-stretch.list`
- * `sudo apt-get update`
- * `sudo apt-get install mosquitto mosquitto-clients`
+ ```
+ sudo wget https://repo.mosquitto.org/debian/mosquitto-repo.gpg.key
+ sudo apt-key add mosquitto-repo.gpg.key
+ cd /etc/apt/sources.list.d/
+ sudo wget http://repo.mosquitto.org/debian/mosquitto-stretch.list
+ sudo apt-get update
+ sudo apt-get install mosquitto mosquitto-clients
+ ```
 
 * get the calender up and running
  * Follow ruby calendar quickstart at [https://developers.google.com/calendar/quickstart/ruby] (https://developers.google.com/calendar/quickstart/ruby) to obtain credentials in the form of a `client_secret.json`
  * copy/rename the `client_secret.json` to the backend folder, e.g. using `scp`
  * test the calender script `ruby calendar.rb -c CALENDAR_ID -p PERSON_NAME -h localhost` 
-  where CALENDER_ID is the 
+  where CALENDER_ID can be found in the settings of the google calender
+ * add it to crontab `crontab -e`
+ * e.g. every 5 minutes: `*/5 * * * * ruby calendar.rb -c CALENDAR_ID -p PERSON_NAME -h localhost >> /home/pi/MiFlo/backend/calendar.log`

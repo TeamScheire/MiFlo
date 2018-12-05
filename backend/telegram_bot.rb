@@ -12,6 +12,9 @@ OptionParser.new do |opts|
   opts.on("-h", "--mqtt-host HOST", "MQTT host") do |v|
     options.mqtt_host = v
   end
+  opts.on("-p", "--person PERSON", "MiFlo user") do |v|
+    options.person = v
+  end
   opts.on_tail("-h", "--help", "Show this message") do
     puts opts
     exit
@@ -26,19 +29,10 @@ Telegram::Bot::Client.run(options.token) do |bot|
     
     when Telegram::Bot::Types::Message
       
-      case message.text
-      when /^[mM]inne (.+)/
+      if message.text.start_with?(options.person)
         json, bot_message = parse_event( $1 )
         if json != ""
-          send_mqtt( "/iot/miflo/minne/timer", json )
-        end
-        if bot != ""
-          bot.api.send_message(chat_id: message.chat.id, text: bot_message)
-        end
-      when /^[fF]lo (.+)/
-        json, bot_message = parse_event( $1 )
-        if json != ""
-          send_mqtt( "/iot/miflo/flo/timer", json )
+          send_mqtt( "/iot/miflo/" + options.person + "/timer", json )
         end
         if bot != ""
           bot.api.send_message(chat_id: message.chat.id, text: bot_message)

@@ -28,7 +28,8 @@ Get a Telegram bot up and running, acquire the token and run the MiFlo bot:
  ```
  sudo apt-get install ruby
  sudo gem install bundler
- bundle install```
+ bundle install
+ ```
 * install mosquitto broker:
  * `sudo wget https://repo.mosquitto.org/debian/mosquitto-repo.gpg.key`
  * `sudo apt-key add mosquitto-repo.gpg.key`

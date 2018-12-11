@@ -17,6 +17,18 @@ Je hebt ook de volgende libraries nodig:
 * [RTC](https://github.com/adafruit/RTClib) library.
 * [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 
+In de gameduino library moet je enkele aanpassingen doen in de GD2.file:
+
+*  Voeg
+	
+	```
+	#define D8  0
+	#define D9  16
+	```
+	toe net voor de lijn `#define CS D8`.
+* Zoek naar `#define L2` en `#define L4` en comment deze lijnen.
+
+
 De arduino code gaat ervanuit dat je de geconverteerde [assets](./assets) mee op de sd kaart gezet hebt.
 
 In de code wordt bv de header-file `m_cool.h` geladen.

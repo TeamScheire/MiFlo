@@ -29,7 +29,7 @@ In de gameduino library moet je enkele aanpassingen doen in de GD2.file:
 * Zoek naar `#define L2` en `#define L4` en comment deze lijnen.
 
 
-De arduino code gaat ervanuit dat je de geconverteerde [assets](./assets) mee op de sd kaart gezet hebt.
+De arduino code gaat ervanuit dat je de geconverteerde [assets](../assets) mee op de sd kaart gezet hebt.
 
 In de code wordt bv de header-file `m_cool.h` geladen.
 

@@ -20,7 +20,7 @@ Get a Telegram bot up and running, acquire the token and run the MiFlo bot:
 The backend can run on any server, but here is a small example on how to do it on a raspberry pi:
 
 * Install raspbian [https://www.raspberrypi.org/downloads/raspbian/](https://www.raspberrypi.org/downloads/raspbian/)
-* Using `sudo raspi-config` you can adapt some basic settings (e.g. enable ssh, change hostname, update, ...)
+* Using `sudo raspi-config` you can adapt some basic settings (e.g. enable ssh, change hostname, update, ...), do not forget to correct the timezone
 * `sudo apt-get update`
 * install git: `sudo apt-get install git`
 * clone the repo `git clone https://github.com/TeamScheire/MiFlo.git`

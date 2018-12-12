@@ -382,7 +382,7 @@ void setup() {
   pinMode( 15, OUTPUT );
 
   Serial.println("Starting gameduino ...");
-  GD.begin(0);
+  GD.begin(GD_STORAGE);
   GD.play( MUTE );
   GD.cmd_setrotate(0);
   GD.cmd_regwrite(REG_VOL_PB, 255);

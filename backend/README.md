@@ -47,7 +47,7 @@ The backend can run on any server, but here is a small example on how to do it o
  * test the calender script `ruby calendar.rb -c CALENDAR_ID -p PERSON_NAME -h localhost` 
   where CALENDER_ID can be found in the settings of the google calender
  * add it to crontab `crontab -e`
- * e.g. every 5 minutes: `*/5 * * * * ruby calendar.rb -c CALENDAR_ID -p PERSON_NAME -h localhost >> /home/pi/MiFlo/backend/calendar.log`
+ * e.g. every 5 minutes: `*/5 * * * * script -c "ruby calendar.rb -c CALENDAR_ID -p PERSON_NAME -h localhost" /home/pi/MiFlo/backend/calendar.log`
 * get the telegram bot up and running
  * create a new bot: `https://core.telegram.org/bots#6-botfather` 
  * test the script `ruby telegram_bot.rb -h localhost -t TELEGRAM_BOT_TOKEN -p PERSON_NAME

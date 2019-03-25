@@ -16,17 +16,18 @@ Je hebt ook de volgende libraries nodig:
 * arduino EEPROM library
 * [RTC](https://github.com/adafruit/RTClib) library.
 * [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+* [PubSubClient](https://github.com/knolleary/pubsubclient) MQTT client library
 
-In de gameduino library moet je enkele aanpassingen doen in de GD2.file:
+In de gameduino library moet je enkele aanpassingen doen in de GD2-files:
 
-*  Voeg
+*  Voeg in transports/wiring.h
 	
 	```
 	#define D8  0
 	#define D9  16
 	```
 	toe net voor de lijn `#define CS D8`.
-* Zoek naar `#define L2` en `#define L4` en comment deze lijnen.
+* Zoek in GD2.h naar `#define L2` en `#define L4` en comment deze lijnen.
 
 
 De arduino code gaat ervanuit dat je de geconverteerde [assets](../assets) mee op de sd kaart gezet hebt.

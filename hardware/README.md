@@ -4,6 +4,7 @@ De hardware in de MiFlo is opgebouwd op eenvoudig verkrijgbare modules:
 
 * In het originele project wordt een [Adafruit Feather HUZZAH](https://learn.adafruit.com/adafruit-feather-huzzah-esp8266) gebruikt als de "Arduino". Deze bevat een ESP8266 chip waarmee we ook WiFi kunnen gebruiken. Zijn opvolger, de [Adafruit Feather HUZZAH32](https://learn.adafruit.com/adafruit-huzzah32-esp32-feather) kan echter ook gebruikt worden. Deze is een pak krachtiger en bovendien een beetje zuiniger in verbruik.
 * De [Gameduino 3](http://excamera.com/sphinx/gameduino3/) is een touchscreen dat je makkelijk op een Arduino kan monteren en aansturen. Het kan ook geluiden of filmpjes spelen van een SD kaart. Bijvoorbeeld [hier te koop](https://www.watterott.com/de/Gameduino-3).
+  * Een micro SD kaart voor de [assets](../assets) van het MiFlo programma. Let op dat je betrouwbare SD-kaart koopt, want de gameduino kan problemen hebben met goedkopere of witte merken. Met een SanDisk of Kingston kan je normaal weinig mis doen.
 * Met een [RTC breakout board](https://www.adafruit.com/product/3295) kunnen we de tijd bijhouden als de MiFlo geen stroom heeft.
 * Een [geluidsversterker](https://www.adafruit.com/product/1752) zorgt ervoor dat de audio krachtig genoeg uit de speakers komt.
 * We bouwden alles in een [SoundLogic draagbare speaker](https://www.action.com/nl-be/p/soundlogic-draagbare-speaker/) van den Action.

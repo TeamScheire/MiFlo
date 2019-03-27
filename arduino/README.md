@@ -6,7 +6,7 @@ Bekijk in de [hardware](../hardware) folder van dit project de volledige hardwar
 
 ## Configuratie en setup
 
-Alle details over de Adafruit Feather [HUZZAH ESP8266](https://learn.adafruit.com/adafruit-feather-huzzah-esp8266/overview) of [HUZZAH32 ESP32]((https://learn.adafruit.com/adafruit-feather-huzzah32-esp32/overview) staan op [de site van adafruit](https://learn.adafruit.com/search?q=HUZZAH).
+Alle details over de Adafruit Feather [HUZZAH ESP8266](https://learn.adafruit.com/adafruit-feather-huzzah-esp8266/overview) of [HUZZAH32 ESP32](https://learn.adafruit.com/adafruit-feather-huzzah32-esp32/overview) staan op [de site van adafruit](https://learn.adafruit.com/search?q=HUZZAH).
 
 Kopiëer het bestand `settings_example.h` naar `settings.h` en vul alle parameters in.
 

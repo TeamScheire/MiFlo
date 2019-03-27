@@ -20,13 +20,20 @@ Je hebt ook de volgende libraries nodig:
 
 In de gameduino library moet je enkele aanpassingen doen in de GD2-files:
 
-*  Voeg in transports/wiring.h
+*  Voor de ESP8266 chip: Voer in transports/wiring.h
 	
 	```
 	#define D8  0
 	#define D9  16
 	```
 	toe net voor de lijn `#define CS D8`.
+* Voor de ESP32 chip: Voer in de transports/wiring.h
+        ```
+        #define D8  15
+        #define D9  32 
+        ```
+        toe net na de lijn `#elif  defined(ESP32)`.
+        Wijzig vervolgens de lijn `#define CS 12` naar `#define CS 15`
 * Zoek in GD2.h naar `#define L2` en `#define L4` en comment deze lijnen.
 
 

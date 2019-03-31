@@ -18,17 +18,16 @@ Je hebt ook de volgende libraries nodig:
 * [ArduinoJson](https://github.com/bblanchon/ArduinoJson) JSON library
 * [PubSubClient](https://github.com/knolleary/pubsubclient) MQTT client library
 
-In de gameduino 2/3 library moet je enkele aanpassingen doen zodat we de correcte pins van de HUZZAH aanspreken:
+In de gameduino 2/3 library moet je enkele aanpassingen doen zodat we de correcte pins van de HUZZAH of HUZZAH32 aanspreken:
 
-*  Voor de ESP8266 chip: Voer in het bestand `transports/wiring.h`
-	
+* Voor de ESP8266 chip: Voer in het bestand `transports/wiring.h`
 	```
 	#define D8  0
 	#define D9  16
 	```
 	toe net voor de lijn `#define CS D8`.
-*  Voor de ESP32 chip: Voer in het bestand `transports/wiring.h`
-
+* Voor de ESP32 chip: 
+  * Voer in het bestand `transports/wiring.h`
 	```
 	#define D8  15
 	#define D9  32 
@@ -41,7 +40,17 @@ In de gameduino 2/3 library moet je enkele aanpassingen doen zodat we de correct
 	```
 	#define CS 15
 	```
-* Zoek in bestand `GD2.h` naar `#define L2` en `#define L4` en comment deze lijnen uit.
+  * Wijzig in het bestand `GD2.h`:
+  	```
+	#elif defined(ESP32)
+	#define SD_PIN        13
+	```
+	in
+	```
+	#elif defined(ESP32)
+	#define SD_PIN        32
+	```
+* (dit lijkt niet nodig: Zoek in bestand `GD2.h` naar `#define L2` en `#define L4` en comment deze lijnen uit.)
 
 
 De arduino code gaat ervanuit dat je de geconverteerde [assets](../assets) mee op de sd kaart gezet hebt.

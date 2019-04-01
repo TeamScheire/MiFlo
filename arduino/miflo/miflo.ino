@@ -91,7 +91,7 @@ char* string2char(String s) {
 }
 
 char* int2char(int n) {
-  char s[16];
+  static char s[16];
   itoa(n, s, 10);
   return s;
 }

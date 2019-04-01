@@ -84,10 +84,13 @@ bool todo_done[ 4 ] = { false, false, false, false };
 char current_job_string[200] = "";
 
 char* string2char(String s) {
+  static char *p;
   if (s.length() != 0) {
-    char *p = const_cast<char*>(s.c_str());
-    return p;
+    p = const_cast<char*>(s.c_str());
+  } else {
+    *p = 0; //empty string
   }
+  return p;
 }
 
 char* int2char(int n) {
@@ -743,7 +746,7 @@ void show_upcoming_events() {
   int x = 0;
   for ( std::map<int, String>::iterator i = cache.begin(); i != cache.end(); i++ ) {
     GD.cmd_text(20, 60 + x * 20, 20, 0, string2char( format_time( i->first / 10000, (i->first / 100) % 100, i->first % 100 ) ) );
-    GD.cmd_text(80, 60 + x * 20, 20, 0, string2char(i->second));
+    GD.cmd_text(80, 60 + x * 20, 20, 0, string2char( i->second ));
     x++;
   }
 

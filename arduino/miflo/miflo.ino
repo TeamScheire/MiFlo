@@ -23,7 +23,13 @@ int noteDurations[] = {
 
 #include "settings.h"
 
+#if defined(ESP8266)     //HUZZAH
 #include <ESP8266WiFi.h>
+#define AMP_SD_PIN 15
+#elif defined(ESP32)    //HUZZAH32
+#include <WiFi.h>
+#define AMP_SD_PIN 16
+#endif
 WiFiClient espClient;
 
 #include <PubSubClient.h>
@@ -148,7 +154,7 @@ int samplefreqs[20] = {G_COOL_FREQ, G_FORMID_FREQ, G_MACHTI_FREQ, G_STIEVA_FREQ,
 int samplelengths[20] = {G_COOL_LENGTH, G_FORMID_LENGTH, G_MACHTI_LENGTH, G_STIEVA_LENGTH, G_WOEW_LENGTH, G_DDUIM2_LENGTH, G_GOED_LENGTH, G_SUPER_LENGTH, G_WOOP_LENGTH, G_ALLEZ_LENGTH, G_DEMAX_LENGTH, G_GOEDZO_LENGTH, G_PRIMA_LENGTH, G_TSJING_LENGTH, G_ZOGOED_LENGTH, G_BOL_LENGTH, G_FANTAS_LENGTH, G_HOPLA_LENGTH, G_SCOOL_LENGTH, G_WIII_LENGTH};
 
 void sample() {
-  digitalWrite(15, HIGH);
+  digitalWrite(AMP_SD_PIN, HIGH);
   GD.play(UNMUTE);
   uint32_t base, len, freq;
   int i = rand() % 20;
@@ -158,11 +164,11 @@ void sample() {
   GD.sample(base, len, freq, ADPCM_SAMPLES);
   delay(2000 * len / freq);
   GD.play(MUTE);
-  digitalWrite(15, LOW);
+  digitalWrite(AMP_SD_PIN, LOW);
 }
 
 void jingle( int n = 0 ) {
-  digitalWrite(15, HIGH);
+  digitalWrite(AMP_SD_PIN, HIGH);
   if ( n == 0 ) {
     GD.play( MUSICBOX, 60 );
     delay(250);
@@ -186,7 +192,7 @@ void jingle( int n = 0 ) {
     delay(500);
     GD.play( MUTE );
   }
-  digitalWrite(15, LOW);
+  digitalWrite(AMP_SD_PIN, LOW);
 }
 
 #include <map>
@@ -379,8 +385,8 @@ void load_jpgs()
 void setup() {
   Serial.begin(115200);
 
-  pinMode( 15, OUTPUT );
 
+  pinMode( AMP_SD_PIN, OUTPUT );
   Serial.println("Starting gameduino ...");
   GD.begin(GD_STORAGE);
   GD.play( MUTE );
